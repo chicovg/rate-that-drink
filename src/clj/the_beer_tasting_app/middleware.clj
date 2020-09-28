@@ -1,22 +1,21 @@
 (ns the-beer-tasting-app.middleware
   (:require
-    [the-beer-tasting-app.env :refer [defaults]]
-    [cheshire.generate :as cheshire]
-    [cognitect.transit :as transit]
-    [clojure.tools.logging :as log]
-    [the-beer-tasting-app.layout :refer [error-page]]
-    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-    [the-beer-tasting-app.middleware.formats :as formats]
-    [muuntaja.middleware :refer [wrap-format wrap-params]]
-    [the-beer-tasting-app.config :refer [env]]
-    [ring.middleware.flash :refer [wrap-flash]]
-    [ring.adapter.undertow.middleware.session :refer [wrap-session]]
-    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
-    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
-    [buddy.auth.backends.session :refer [session-backend]])
-  )
+   [the-beer-tasting-app.env :refer [defaults]]
+   [cheshire.generate :as cheshire]
+   [cognitect.transit :as transit]
+   [clojure.tools.logging :as log]
+   [the-beer-tasting-app.layout :refer [render-error]]
+   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+   [the-beer-tasting-app.middleware.formats :as formats]
+   [muuntaja.middleware :refer [wrap-format wrap-params]]
+   [the-beer-tasting-app.config :refer [env]]
+   [ring.middleware.flash :refer [wrap-flash]]
+   [ring.adapter.undertow.middleware.session :refer [wrap-session]]
+   [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+   [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+   [buddy.auth.accessrules :refer [restrict]]
+   [buddy.auth :refer [authenticated?]]
+   [buddy.auth.backends.session :refer [session-backend]]))
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -24,18 +23,17 @@
       (handler req)
       (catch Throwable t
         (log/error t (.getMessage t))
-        (error-page {:status 500
-                     :title "Something very bad has happened!"
-                     :message "We've dispatched a team of highly trained gnomes to take care of the problem."})))))
+        (render-error {:status 500
+                       :title "Something very bad has happened!"
+                       :message "We've dispatched a team of highly trained gnomes to take care of the problem."})))))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
-    handler
-    {:error-response
-     (error-page
-       {:status 403
-        :title "Invalid anti-forgery token"})}))
-
+   handler
+   {:error-response
+    (render-error
+     {:status 403
+      :title "Invalid anti-forgery token"})}))
 
 (defn wrap-formats [handler]
   (let [wrapped (-> handler wrap-params (wrap-format formats/instance))]
@@ -46,8 +44,8 @@
 
 (defn on-error [request response]
   (error-page
-    {:status 403
-     :title (str "Access to " (:uri request) " is not authorized")}))
+   {:status 403
+    :title (str "Access to " (:uri request) " is not authorized")}))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler authenticated?
@@ -65,7 +63,7 @@
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true}})
       (wrap-defaults
-        (-> site-defaults
-            (assoc-in [:security :anti-forgery] false)
-            (dissoc :session)))
+       (-> site-defaults
+           (assoc-in [:security :anti-forgery] false)
+           (dissoc :session)))
       wrap-internal-error))
