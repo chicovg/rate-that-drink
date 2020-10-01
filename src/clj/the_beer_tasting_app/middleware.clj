@@ -43,7 +43,7 @@
       ((if (:websocket? request) handler wrapped) request))))
 
 (defn on-error [request response]
-  (error-page
+  (render-error
    {:status 403
     :title (str "Access to " (:uri request) " is not authorized")}))
 

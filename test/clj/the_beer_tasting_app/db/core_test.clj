@@ -61,4 +61,5 @@
                     (db/update-beer! conn))))
       (is (= "Updated" (:name (db/get-beer conn {:id id}))))
       (is (= 1 (db/delete-beer! conn {:id id})))
-      (is (nil? (db/get-beer conn {:id id}))))))
+      (is (nil? (db/get-beer conn {:id id})))
+      (is (= 1 (db/delete-user! {:id user_id}))))))

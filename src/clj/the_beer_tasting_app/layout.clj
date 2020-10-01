@@ -14,18 +14,6 @@
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
 (filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
 
-;; (defn render
-;;   "renders the HTML template located relative to resources/html"
-;;   [request template & [params]]
-;;   (content-type
-;;     (ok
-;;       (parser/render-file
-;;         template
-;;         (assoc params
-;;           :page template
-;;           :csrf-token *anti-forgery-token*)))
-;;     "text/html; charset=utf-8"))
-
 (defhtml base-page
   "The base page for the app"
   [content]
@@ -56,7 +44,7 @@
    [:div.item
     [:a {:href "/login"} "Login"]]
    [:div.item
-    [:a {:href "/sigup"} "Sign Up"]]])
+    [:a {:href "/profile"} "Sign Up"]]])
 
 (defhtml error-page
   "A page for displaying errors"

@@ -13,11 +13,23 @@
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
+;; Route organization
+;;
+;; home routes (public)
+;;    landing
+;;    error
+;;    login
+;;
+;; app routes (restricted)
+;;    beers
+;;    create beer
+;;    edit beer
+;;
 (mount/defstate app-routes
   :start
   (ring/ring-handler
     (ring/router
-      [(home-routes)])
+     [(home-routes)])
     (ring/routes
       (ring/create-resource-handler
         {:path "/"})
