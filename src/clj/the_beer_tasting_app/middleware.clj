@@ -1,21 +1,22 @@
 (ns the-beer-tasting-app.middleware
   (:require
-   [the-beer-tasting-app.env :refer [defaults]]
-   [cheshire.generate :as cheshire]
-   [cognitect.transit :as transit]
-   [clojure.tools.logging :as log]
-   [the-beer-tasting-app.layout :refer [render-error]]
-   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-   [the-beer-tasting-app.middleware.formats :as formats]
-   [muuntaja.middleware :refer [wrap-format wrap-params]]
-   [the-beer-tasting-app.config :refer [env]]
-   [ring.middleware.flash :refer [wrap-flash]]
-   [ring.adapter.undertow.middleware.session :refer [wrap-session]]
-   [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [buddy.auth.accessrules :refer [restrict]]
    [buddy.auth :refer [authenticated?]]
-   [buddy.auth.backends.session :refer [session-backend]]))
+   [buddy.auth.backends.session :refer [session-backend]]
+   [cheshire.generate :as cheshire]
+   [cognitect.transit :as transit]
+   [clojure.tools.logging :as log]
+   [muuntaja.middleware :refer [wrap-format wrap-params]]
+   [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+   [ring.adapter.undertow.middleware.session :refer [wrap-session]]
+   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+   [ring.middleware.flash :refer [wrap-flash]]
+   [ring.util.response :refer [redirect]]
+   [the-beer-tasting-app.env :refer [defaults]]
+   [the-beer-tasting-app.layout :refer [render render-error]]
+   [the-beer-tasting-app.middleware.formats :as formats]
+   [the-beer-tasting-app.config :refer [env]]))
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -43,9 +44,7 @@
       ((if (:websocket? request) handler wrapped) request))))
 
 (defn on-error [request response]
-  (render-error
-   {:status 403
-    :title (str "Access to " (:uri request) " is not authorized")}))
+  (redirect "/login"))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler authenticated?

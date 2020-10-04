@@ -17,6 +17,12 @@ SELECT id, first_name, last_name, email
 FROM users
 WHERE id = :id
 
+-- :name get-user-by-email :? :1
+-- :doc retrieves the user record matching the provided email address
+SELECT id, first_name, last_name, email, pass
+FROM users
+WHERE email = :email
+
 -- :name delete-user! :? :n
 -- :doc deletes a user record given the id
 DELETE FROM users

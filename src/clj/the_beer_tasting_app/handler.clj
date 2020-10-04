@@ -3,6 +3,7 @@
     [the-beer-tasting-app.middleware :as middleware]
     [the-beer-tasting-app.layout :refer [error-page]]
     [the-beer-tasting-app.routes.home :refer [home-routes]]
+    [the-beer-tasting-app.routes.user :refer [user-routes]]
     [reitit.ring :as ring]
     [ring.middleware.content-type :refer [wrap-content-type]]
     [ring.middleware.webjars :refer [wrap-webjars]]
@@ -18,18 +19,22 @@
 ;; home routes (public)
 ;;    landing
 ;;    error
+;;    profile
 ;;    login
 ;;
 ;; app routes (restricted)
 ;;    beers
 ;;    create beer
 ;;    edit beer
+;;    edit-profile
+;;    logout
 ;;
 (mount/defstate app-routes
   :start
   (ring/ring-handler
     (ring/router
-     [(home-routes)])
+     [(home-routes)
+      (user-routes)])
     (ring/routes
       (ring/create-resource-handler
         {:path "/"})

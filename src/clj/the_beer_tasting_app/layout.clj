@@ -30,21 +30,35 @@
             :type "text/css"}]]
    [:body
     content
+    [:script {:src "/assets/jquery/jquery.js"}]
     [:script {:src "/assets/Semantic-UI/semantic.min.js"}]
-    [:script "console.log('hello!');"]]])
+    [:script {:src "/js/app.js"}]]])
+
+(defn navbar-item [uri link title]
+  [:div.item {:class (when (= uri link) "active")}
+   [:a {:href link} title]])
 
 (defn navbar
   "A navbar for the app"
   [request]
-  [:div.ui.stackable.menu
-   [:div.item
-    [:img {:src "/img/beer.png"}]]
-   [:div.header.item
-    "The Beer Tasting App"]
-   [:div.item
-    [:a {:href "/login"} "Login"]]
-   [:div.item
-    [:a {:href "/profile"} "Sign Up"]]])
+  (let [authed? (get-in request [:session :identity])
+        item (partial navbar-item (:uri request))]
+    [:div.ui.stackable.menu
+     [:div.item
+      [:img {:src "/img/beer.png"}]
+      [:p.app-name "Rate that beer"]]
+     (if authed?
+       (item "/user/beers" "Beers")
+       (item "/" "Home"))
+     (if authed?
+       (item "/user/logout" "Log Out")
+       (item "/login" "Log In"))
+     (when (not authed?)
+       (item "/profile" "Sign Up"))
+     (when authed?
+       [:div.item.right
+        [:i.icon.user.circle]
+        [:a {:href "/user/profile"} (get-in request [:session :first_name])]])]))
 
 (defhtml error-page
   "A page for displaying errors"
@@ -57,9 +71,6 @@
      [:div.header {:role "header"} title]
      (when message [:p message])]]))
 
-;; TODO
-;; make this the default
-;; need a base template in hiccup
 (defn render
   [request content]
   (prn request)

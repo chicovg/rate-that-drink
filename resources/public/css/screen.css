@@ -1,9 +1,24 @@
 body {
   padding: 10px;
 }
-
+.app-name {
+  font-face: bold;
+  font-size: 20px;
+  margin-left: 15px;
+}
+.beers-header {
+  display: flex;
+  justify-content: space-between;
+}
+.beers-header > a {
+  align-self: center;
+  margin-bottom: 6px;
+}
 .error .icon {
   float: left;
+}
+.total {
+  margin-top: 1em;
 }
 .ui.menu:not(.vertical) .item > .button:not(:last-child) {
   margin-right: 8px;
