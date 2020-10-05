@@ -1,7 +1,7 @@
 (ns the-beer-tasting-app.routes.home
   (:require
+   [buddy.hashers :as h]
    [ring.util.response :refer [redirect bad-request]]
-   [struct.core :as s]
    [the-beer-tasting-app.db.core :refer [*db*] :as db]
    [the-beer-tasting-app.layout :as layout]
    [the-beer-tasting-app.middleware :as middleware]
@@ -40,7 +40,7 @@
 (defn authenticate-user [request]
   (let [{email :email pass :pass} (:params request)
         user (db/get-user-by-email *db* {:email email})]
-    (if (= (:pass user) pass)
+    (if (h/check pass (:pass user))
       (-> (redirect "/user/beers")
           (assoc-in [:session] (-> (:session request)
                                    (assoc :identity (:id user))
@@ -75,22 +75,27 @@
     [:button.ui.button.primary {:type "submit"} "Submit"]
     [:a.ui.button {:href "/"} "Cancel"]]])
 
-(defn get-profile-form-page [request]
-  (layout/render request (profile-form-page {:errors []})))
+(defn get-profile-form-page
+  ([request] (layout/render request (profile-form-page {:errors []})))
+  ([request errors] (layout/render request (profile-form-page {:errors errors}))))
 
 (defn create-profile [request]
   (let [user (:params request)
         session (:session request)
-        next-url (get-in request [:params :next] "/")]
-    (let [schema-errors (sc/get-schema-errors user sc/user-schema)]
+        next-url (get-in request [:params :next] "/user/beers")]
+    (let [schema-errors (sc/get-schema-errors user sc/user-schema)
+          user-by-email (db/get-user-by-email user)]
       (if (empty? schema-errors)
-        (if (= (:pass user) (:confirm-pass user))
-          (let [{id :id} (db/create-user! user)
-                updated-session (assoc session :identity id)]
-            (-> (redirect next-url)
-                (assoc :session updated-session)))
-          (layout/render request (profile-form-page {:errors ["Passwords do not match"]})))
-        (layout/render request (profile-form-page {:errors schema-errors}))))))
+        (if (not user-by-email)
+          (if (= (:pass user) (:confirm-pass user))
+            (let [encrypted-pass (h/encrypt (:pass user))
+                  {id :id} (db/create-user! (assoc user :pass encrypted-pass))
+                  updated-session (assoc session :identity id)]
+              (-> (redirect next-url)
+                  (assoc :session updated-session)))
+            (get-profile-form-page request ["Passwords do not match"]))
+          (get-profile-form-page request ["A user already exists with that email address"]))
+        (get-profile-form-page request schema-errors)))))
 
 (defn home-routes []
   [""
