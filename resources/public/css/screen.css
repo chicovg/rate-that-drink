@@ -23,3 +23,15 @@ body {
 .ui.menu:not(.vertical) .item > .button:not(:last-child) {
   margin-right: 8px;
 }
+
+@media screen and (max-width: 600px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 600px) {
+  .mobile-only {
+    display: none;
+  }
+}

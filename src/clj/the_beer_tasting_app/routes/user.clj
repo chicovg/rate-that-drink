@@ -8,14 +8,76 @@
    [the-beer-tasting-app.schema :as sc])
   (:use [ring.util.anti-forgery]))
 
-(defn user-beers-page []
-  [:div.ui.segment
-   [:div.beers-header
-    [:h1 "Your Beers"]
-    [:a {:href "/user/beers/new"} "Add New"]]])
+(defn user-beers-page [user_id]
+  (let [beers (db/get-beers *db* {:user_id user_id})]
+    (prn beers)
+    [:div.ui.segment
+     [:div.beers-header
+      [:h1 "Your Beers"]
+      [:a {:href "/user/beers/new"} "Add New"]]
+     [:table.ui.celled.table.desktop-only
+      [:thead
+       [:tr
+        [:th "Name"]
+        [:th "Brewery"]
+        [:th "Style"]
+        [:th.one.wide "Appearance"]
+        [:th.one.wide "Smell"]
+        [:th.one.wide "Taste"]
+        [:th.one.wide "Aftertaste"]
+        [:th.one.wide "Drinkability"]
+        [:th.one.wide "Rating"]]]
+      [:tbody
+       (for [{:keys [name
+                     brewery
+                     style
+                     appearance
+                     smell
+                     taste
+                     aftertaste
+                     drinkability]} beers]
+         [:tr
+          [:td {:data-label "Name"} name]
+          [:td {:data-label "Brewery"} brewery]
+          [:td {:data-label "Style"} style]
+          [:td {:data-label "Appearance"} appearance]
+          [:td {:data-label "Smell"} smell]
+          [:td {:data-label "Taste"} taste]
+          [:td {:data-label "Aftertaste"} aftertaste]
+          [:td {:data-label "Drinkability"} drinkability]
+          [:td {:data-label "Rating"} (+ appearance
+                                         smell
+                                         taste
+                                         aftertaste
+                                         drinkability)]])]]
+     [:table.ui.celled.table.mobile-only
+      [:thead
+       [:tr
+        [:th "Name"]
+        [:th "Brewery"]
+        [:th "Style"]
+        [:th "Rating"]]]
+      [:tbody
+       (for [{:keys [name
+                     brewery
+                     style
+                     appearance
+                     smell
+                     taste
+                     aftertaste
+                     drinkability]} beers]
+         [:tr
+          [:td {:data-label "Name"} name]
+          [:td {:data-label "Brewery"} brewery]
+          [:td {:data-label "Style"} style]
+          [:td {:data-label "Rating"} (+ appearance
+                                         smell
+                                         taste
+                                         aftertaste
+                                         drinkability)]])]]]))
 
 (defn get-user-beers-page [request]
-  (layout/render request (user-beers-page)))
+  (layout/render request (user-beers-page (get-in request [:session :identity]))))
 
 (defn user-beer-form-page []
   [:div.ui.segment
@@ -33,21 +95,21 @@
     [:div.two.fields
      [:div.field
       [:label "Appearance"]
-      [:input.rating {:type "number" :min 0 :max 10 :placeholder "Appearance"}]]
+      [:input.rating {:name "apperance" :type "number" :min 0 :max 10 :placeholder "Appearance (0-10)"}]]
      [:div.field
       [:label "Smell"]
-      [:input.rating {:type "number" :min 0 :max 20 :placeholder "Smell"}]]]
+      [:input.rating {:name "smell" :type "number" :min 0 :max 20 :placeholder "Smell (0-20)"}]]]
     [:div.two.fields
      [:div.field
       [:label "Taste"]
-      [:input.rating {:type "number" :min 0 :max 30 :placeholder "Taste"}]]
+      [:input.rating {:name "taste" :type "number" :min 0 :max 30 :placeholder "Taste (0-30)"}]]
      [:div.field.rating
       [:label "Aftertaste"]
-      [:input.rating {:type "number" :min 0 :max 20 :placeholder "Aftertaste"}]]]
+      [:input.rating {:name "aftertaste" :type "number" :min 0 :max 20 :placeholder "Aftertaste (0-20)"}]]]
     [:div.two.fields
      [:div.field.rating
       [:label "Drinkability"]
-      [:input.rating {:type "number" :min 0 :max 30 :placeholder "Drinkability"}]]
+      [:input.rating {:name "drinkability" :type "number" :min 0 :max 30 :placeholder "Drinkability (0-30)"}]]
      [:div.field
       [:label "Total"]
       [:p.total 0]]]
@@ -59,12 +121,20 @@
 (defn get-user-beer-form-page [request]
   (layout/render request (user-beer-form-page)))
 
+(def default-beer {:appearance 10
+                   :smell 20
+                   :taste 30
+                   :aftertaste 20
+                   :drinkability 30})
+
 (defn create-new-beer [request]
-  (let [beer (-> (:params request)
+  (let [beer (-> (merge default-beer (:params request))
                  (assoc :user_id (get-in request [:session :identity])))]
     (let [schema-errors (sc/get-schema-errors beer sc/beer-schema)]
       (if (empty? schema-errors)
-        (redirect "/user/beers")
+        (if (db/create-beer! *db* beer)
+          (redirect "/user/beers")
+          (layout/render request (user-beer-form-page {:errors ["There was a problem saving, try again later."]})))
         (layout/render request (user-beer-form-page {:errors schema-errors}))))))
 
 (defn user-profile-page []
