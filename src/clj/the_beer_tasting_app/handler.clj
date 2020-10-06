@@ -1,7 +1,7 @@
 (ns the-beer-tasting-app.handler
   (:require
     [the-beer-tasting-app.middleware :as middleware]
-    [the-beer-tasting-app.layout :refer [error-page]]
+    [the-beer-tasting-app.layout :refer [render-error]]
     [the-beer-tasting-app.routes.home :refer [home-routes]]
     [the-beer-tasting-app.routes.user :refer [user-routes]]
     [reitit.ring :as ring]
@@ -14,21 +14,6 @@
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
-;; Route organization
-;;
-;; home routes (public)
-;;    landing
-;;    error
-;;    profile
-;;    login
-;;
-;; app routes (restricted)
-;;    beers
-;;    create beer
-;;    edit beer
-;;    edit-profile
-;;    logout
-;;
 (mount/defstate app-routes
   :start
   (ring/ring-handler
@@ -42,11 +27,11 @@
         (wrap-webjars (constantly nil)))
       (ring/create-default-handler
         {:not-found
-         (constantly (error-page {:status 404, :title "404 - Page not found"}))
+         (constantly (render-error {:status 404, :title "404 - Page not found"}))
          :method-not-allowed
-         (constantly (error-page {:status 405, :title "405 - Not allowed"}))
+         (constantly (render-error {:status 405, :title "405 - Not allowed"}))
          :not-acceptable
-         (constantly (error-page {:status 406, :title "406 - Not acceptable"}))}))))
+         (constantly (render-error {:status 406, :title "406 - Not acceptable"}))}))))
 
 (defn app []
   (middleware/wrap-base #'app-routes))

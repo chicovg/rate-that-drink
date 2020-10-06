@@ -11,7 +11,7 @@
    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
    [ring.adapter.undertow.middleware.session :refer [wrap-session]]
    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-   [ring.middleware.flash :refer [wrap-flash]]
+   [ring.middleware.flash :refer [wrap-flash flash-request flash-response]]
    [ring.util.response :refer [redirect]]
    [the-beer-tasting-app.env :refer [defaults]]
    [the-beer-tasting-app.layout :refer [render render-error]]

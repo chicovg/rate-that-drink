@@ -67,7 +67,7 @@
    [:div.ui.container
     [:h1.ui.header "Error " status]
     [:div.ui.error.message
-     [:i.icon.big.exclamation.triangle]
+     [:i.icon.large.exclamation.triangle]
      [:div.header {:role "header"} title]
      (when message [:p message])]]))
 

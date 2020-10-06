@@ -11,7 +11,7 @@
 (defn home-page [request]
   (layout/render request
                  [:div.ui.segment
-                  [:h2 "Welcome to the beer tasting app"]
+                  [:h1 "Welcome to the 'Rate that beer' app"]
                   [:p "This is a place where you can rate and compare your favorite brews."]
                   [:p "Login or sign up to get started!"]]))
 

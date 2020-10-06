@@ -14,15 +14,15 @@
     (mount/start
      #'the-beer-tasting-app.config/env
      #'the-beer-tasting-app.db.core/*db*)
-    ;; (migrations/migrate ["migrate"] (select-keys env [:database-url]))
+    (migrations/migrate ["migrate"] (select-keys env [:database-url]))
     (f)))
 
 (deftest test-users
   (jdbc/with-transaction [conn *db* {:rollback-only true}]
     (let [{id :id} (first (db/create-user! conn {:first_name "Bob"
-                                                   :last_name "Slidell"
-                                                   :email "bob.slidell@initech.com"
-                                                   :pass "pass"}))]
+                                                 :last_name "Slidell"
+                                                 :email "bob.slidell@initech.com"
+                                                 :pass "pass"}))]
       (is (= {:id id
               :first_name "Bob"
               :last_name "Slidell"
@@ -40,10 +40,10 @@
 
 (deftest test-beers
   (jdbc/with-transaction [conn *db* {:rollback-only true}]
-    (let [{user_id :id} (-> (db/create-user! {:first_name "Johnny"
-                                              :last_name "Karate"
-                                              :email "jkicks@hitmail.com"
-                                              :pass "chop"})
+    (let [{user_id :id} (-> (db/create-user! conn {:first_name "Johnny"
+                                                   :last_name "Karate"
+                                                   :email "jkicks@hitmail.com"
+                                                   :pass "chop"})
                             (first))
           {id :id} (-> (db/create-beer! conn (assoc beer :user_id user_id))
                        (first))]
@@ -62,4 +62,4 @@
       (is (= "Updated" (:name (db/get-beer conn {:id id}))))
       (is (= 1 (db/delete-beer! conn {:id id})))
       (is (nil? (db/get-beer conn {:id id})))
-      (is (= 1 (db/delete-user! {:id user_id}))))))
+      (is (= 1 (db/delete-user! conn {:id user_id}))))))
