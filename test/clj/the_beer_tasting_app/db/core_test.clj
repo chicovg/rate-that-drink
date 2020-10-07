@@ -36,7 +36,8 @@
            :smell 10
            :taste 18
            :aftertaste 22
-           :drinkability 29})
+           :drinkability 29
+           :comments nil})
 
 (deftest test-beers
   (jdbc/with-transaction [conn *db* {:rollback-only true}]
