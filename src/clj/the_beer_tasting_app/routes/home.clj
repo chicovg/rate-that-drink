@@ -89,8 +89,12 @@
         (if (not user-by-email)
           (if (= (:pass user) (:confirm-pass user))
             (let [encrypted-pass (h/encrypt (:pass user))
-                  {id :id} (db/create-user! (assoc user :pass encrypted-pass))
-                  updated-session (assoc session :identity id)]
+                  identity (-> (db/create-user! *db* (assoc user :pass encrypted-pass))
+                               first
+                               :id)
+                  updated-session (-> session
+                                      (assoc :identity identity)
+                                      (assoc :first_name (:first_name user)))]
               (-> (redirect next-url)
                   (assoc :session updated-session)))
             (get-profile-form-page request ["Passwords do not match"]))

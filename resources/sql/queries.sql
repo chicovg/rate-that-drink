@@ -40,6 +40,7 @@ INSERT INTO beers (
     taste,
     aftertaste,
     drinkability,
+    comments,
     created_at,
     updated_at
 )
@@ -53,6 +54,7 @@ VALUES (
     :taste,
     :aftertaste,
     :drinkability,
+    :comments,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )

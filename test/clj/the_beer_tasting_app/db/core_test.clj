@@ -44,7 +44,7 @@
                                                    :last_name "Karate"
                                                    :email "jkicks@hitmail.com"
                                                    :pass "chop"})
-                            (first))
+                            first)
           {id :id} (-> (db/create-beer! conn (assoc beer :user_id user_id))
                        (first))]
       (is (not (nil? user_id)))

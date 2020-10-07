@@ -22,3 +22,20 @@
       []
       (for [[field message] schema-errors]
         (str (name field) " " message)))))
+
+(defn parse-int [int-string]
+  (Integer/parseInt int-string))
+
+(defn convert-beer [beer]
+  (prn beer)
+  (-> beer
+      (update :appearance parse-int)
+      (update :smell parse-int)
+      (update :taste parse-int)
+      (update :aftertaste parse-int)
+      (update :drinkability parse-int)))
+
+(defn beer-total [beer]
+  (->> [:appearance :smell :taste :aftertaste :drinkability]
+      (map #(% beer 0))
+      (reduce +)))

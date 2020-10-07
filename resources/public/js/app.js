@@ -1,3 +1,19 @@
+var beerTable = document.querySelector('#beers');
+
+if (beerTable) {
+    var beerRows = beerTable.getElementsByTagName('tr');
+
+    for (row of beerRows) {
+        if (row.dataset.beerId) {
+            var link = "/user/beers/edit/" + row.dataset.beerId;
+
+            row.onclick = function() {
+                window.location = link;
+            }
+        }
+    }
+}
+
 var ratings = document.querySelectorAll('.rating');
 var total = document.querySelector('.total');
 
@@ -10,7 +26,7 @@ function onRatingChange() {
         }
     }
     total.textContent = totalValue;
-};
+}
 
 ratings.forEach(function(e) {
     e.addEventListener('change', onRatingChange);

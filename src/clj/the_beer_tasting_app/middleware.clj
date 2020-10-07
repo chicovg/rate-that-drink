@@ -56,8 +56,18 @@
         (wrap-authentication backend)
         (wrap-authorization backend))))
 
+(defn wrap-request-log [handler]
+  (fn
+    ([request]
+     (do (prn "Request\n" request)
+         (handler request)))
+    ([request respond raise]
+     (do (prn "Request:\n" request)
+         (handler request respond raise)))))
+
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      wrap-request-log
       wrap-auth
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true}})

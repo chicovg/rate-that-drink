@@ -73,7 +73,6 @@
 
 (defn render
   [request content]
-  (prn request)
   (content-type
    (ok (base-page [:div.ui.container (navbar request) content]))
    "text/html; charset=utf-8"))
