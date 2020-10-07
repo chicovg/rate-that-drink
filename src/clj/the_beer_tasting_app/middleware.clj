@@ -56,6 +56,7 @@
         (wrap-authentication backend)
         (wrap-authorization backend))))
 
+;; TODO make this dev-only middleware
 (defn wrap-request-log [handler]
   (fn
     ([request]
@@ -67,7 +68,6 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
-      wrap-request-log
       wrap-auth
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true}})
