@@ -36,12 +36,15 @@
 
 (defn user-beer-form-page [{beer :beer errors :errors}]
   [:div.ui.segment
-   [:h1 (if beer "Update your beer" "Add a new beer")]
+   [:div.beers-header
+    [:h1 (if beer "Update your beer" "Add a new beer")]
+    (when beer
+      [:a.ui.button.negative {:href (str "/user/beers/delete/" (:id beer))} "Delete"])]
    (when (not-empty errors)
      [:div.ui.error.message
       (for [error errors]
         [:p error])])
-   [:form.ui.form {:method (if beer "put" "post")}
+   [:form.ui.form {:method "post"}
     [:div.field
      [:label "Name"]
      [:input {:type "text"
@@ -117,11 +120,6 @@
 (defn get-user-beer-form-page [request]
   (layout/render request (user-beer-form-page {})))
 
-(defn get-user-edit-beer-page [request]
-  (let [beer (db/get-beer *db* (-> (:path-params request)
-                                   (update :id sc/parse-int)))]
-    (layout/render request (user-beer-form-page {:beer beer}))))
-
 (def default-beer {:appearance "10"
                    :smell "20"
                    :taste "30"
@@ -139,6 +137,11 @@
         (layout/render request (user-beer-form-page {:errors ["There was a problem saving, try again later."]})))
       (layout/render request (user-beer-form-page {:errors schema-errors})))))
 
+(defn get-user-edit-beer-page [request]
+  (let [beer (db/get-beer *db* (-> (:path-params request)
+                                   (update :id sc/parse-int)))]
+    (layout/render request (user-beer-form-page {:beer beer}))))
+
 (defn update-beer [request]
   (let [beer (-> (:params request)
                  (sc/convert-beer)
@@ -148,8 +151,35 @@
     (if (empty? schema-errors)
       (if (db/update-beer! *db* beer)
         (redirect "/user/beers")
-        (layout/render request (user-beer-form-page {:errors ["There was a problem updating, try again later."]}))))
-      (layout/render request (user-beer-form-page {:errors schema-errors}))))
+        (layout/render request (user-beer-form-page {:beer beer :errors ["There was a problem updating, try again later."]})))
+      (layout/render request (user-beer-form-page {:beer beer :errors schema-errors})))))
+
+(defn delete-beer-page [{errors :errors id :id}]
+  [:div.ui.segment
+   [:h1 "Please confirm"]
+   [:div.ui.warning.message
+    [:p "Are you sure that you want to delete?"]]
+   (when (not-empty errors)
+     [:div.ui.error.message
+      (for [error errors]
+        [:p error])])
+   [:form.ui.form {:method "post"}
+    (anti-forgery-field)
+    [:input {:hidden true :value id}]
+    [:div.ui.horizontal.divider]
+    [:button.ui.button.primary {:type "submit"} "Submit"]
+    [:a.ui.button {:href "/user/beers"} "Cancel"]]])
+
+(defn get-user-delete-beer-page [request]
+  (layout/render request (delete-beer-page (-> (:path-params request)
+                                               (update :id sc/parse-int)))))
+
+(defn delete-beer [request]
+  (let [id (-> (get-in request [:path-params :id])
+               (sc/parse-int))]
+    (if (db/delete-beer! *db* {:id id})
+      (redirect "/user/beers")
+      (layout/render request (delete-beer-page {:errors ["There was a problem deleting, try again later."]})))))
 
 (defn user-profile-page []
   [:div.ui.segment
@@ -174,7 +204,9 @@
    ["/beers" {:get get-user-beers-page}]
    ["/beers/new" {:get get-user-beer-form-page
                   :post create-new-beer}]
+   ["/beers/delete/:id" {:get get-user-delete-beer-page
+                         :post delete-beer}]
    ["/beers/edit/:id" {:get get-user-edit-beer-page
-                       :put update-beer}]
+                       :post update-beer}]
    ["/profile" {:get get-user-profile-page}]
    ["/logout" {:get logout-user}]])
