@@ -4,8 +4,6 @@
    [buddy.auth.accessrules :refer [restrict]]
    [buddy.auth :refer [authenticated?]]
    [buddy.auth.backends.session :refer [session-backend]]
-   [cheshire.generate :as cheshire]
-   [cognitect.transit :as transit]
    [clojure.tools.logging :as log]
    [muuntaja.middleware :refer [wrap-format wrap-params]]
    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
@@ -55,16 +53,6 @@
     (-> handler
         (wrap-authentication backend)
         (wrap-authorization backend))))
-
-;; TODO make this dev-only middleware
-(defn wrap-request-log [handler]
-  (fn
-    ([request]
-     (do (prn "Request\n" request)
-         (handler request)))
-    ([request respond raise]
-     (do (prn "Request:\n" request)
-         (handler request respond raise)))))
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)

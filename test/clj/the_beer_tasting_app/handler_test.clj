@@ -7,7 +7,8 @@
    [the-beer-tasting-app.handler :refer :all]
    [the-beer-tasting-app.middleware.formats :as formats]
    [muuntaja.core :as m]
-   [mount.core :as mount]))
+   [mount.core :as mount])
+  (:use [ring.util.anti-forgery]))
 
 (defn parse-json [body]
   (m/decode formats/instance "application/json" body))
@@ -27,6 +28,17 @@
        first
        :content
        first))
+
+(defn select-anti-forgery-token [parsed-body]
+  (->> parsed-body
+       (s/select (s/descendant
+                  (s/tag :body)
+                  (s/tag :form)
+                  (s/and (s/tag :input)
+                         (s/id "__anti-forgery-token"))))
+       first
+       :attrs
+       :value))
 
 (use-fixtures
   :once

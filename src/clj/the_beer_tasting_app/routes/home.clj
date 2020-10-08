@@ -1,83 +1,35 @@
 (ns the-beer-tasting-app.routes.home
   (:require
    [buddy.hashers :as h]
+   [ring.util.http-response :refer [content-type]]
    [ring.util.response :refer [redirect bad-request]]
    [the-beer-tasting-app.db.core :refer [*db*] :as db]
    [the-beer-tasting-app.layout :as layout]
    [the-beer-tasting-app.middleware :as middleware]
+   [the-beer-tasting-app.routes.pages :as pages]
    [the-beer-tasting-app.schema :as sc])
-  (:use [ring.util.anti-forgery]))
+  (:use [ring.util.anti-forgery]
+        [hiccup.core]))
 
 (defn home-page [request]
-  (layout/render request
-                 [:div.ui.segment
-                  [:h1 "Welcome to the 'Rate that beer' app"]
-                  [:p "This is a place where you can rate and compare your favorite brews."]
-                  [:p "Login or sign up to get started!"]]))
-
-(defn login-page [{errors :errors}]
-  [:div.ui.segment
-   [:h1 "Enter your email and password"]
-   (when (not-empty errors)
-     [:div.ui.error.message
-      (for [error errors]
-        [:p error])])
-   [:form.ui.form {:method "post"}
-    [:div.field
-     [:label "Email"]
-     [:input {:type "email" :name "email" :placeholder "Email" :required true}]]
-    [:div.field
-     [:label "Password"]
-     [:input {:type "password" :name "pass" :placeholder "Password" :required true}]]
-    (anti-forgery-field)
-    [:div.ui.horizontal.divider]
-    [:button.ui.button.primary {:type "submit"} "Submit"]
-    [:a.ui.button {:href "/"} "Cancel"]]])
+  (layout/render request (pages/home-page)))
 
 (defn get-login-page [request]
-  (layout/render request (login-page {})))
+  (layout/render request (pages/login-page {:errors nil})))
 
 (defn authenticate-user [request]
-  (let [{email :email pass :pass} (:params request)
+  (let [{:keys [email pass]} (:params request)
         user (db/get-user-by-email *db* {:email email})]
     (if (h/check pass (:pass user))
       (-> (redirect "/user/beers")
           (assoc-in [:session] (-> (:session request)
                                    (assoc :identity (:id user))
                                    (assoc :first_name (:first_name user)))))
-      (layout/render request (login-page {:errors ["Invalid email or password"]})))))
-
-(defn profile-form-page [{errors :errors}]
-  [:div.ui.segment
-   [:h1 "Create an account"]
-   (when (not-empty errors)
-     [:div.ui.error.message
-      (for [error errors]
-        [:p error])])
-   [:form.ui.form {:method "post"}
-    [:div.field
-     [:label "First Name"]
-     [:input {:type "text" :name "first_name" :placeholder "First Name" :required true}]]
-    [:div.field
-     [:label "Last Name"]
-     [:input {:type "text" :name "last_name" :placeholder "Last Name" :required true}]]
-    [:div.field
-     [:label "Email"]
-     [:input {:type "email" :name "email" :placeholder "Email" :required true}]]
-    [:div.field
-     [:label "Password"]
-     [:input {:type "password" :name "pass" :placeholder "Password"}]]
-    [:div.field
-     [:label "Confirm Password"]
-     [:input {:type "password" :name "confirm-pass" :placeholder "Password"}]]
-    (anti-forgery-field)
-    [:div.ui.horizontal.divider]
-    [:button.ui.button.primary {:type "submit"} "Submit"]
-    [:a.ui.button {:href "/"} "Cancel"]]])
+      (layout/render request (pages/login-page {:errors ["Invalid email or password"]})))))
 
 (defn get-profile-form-page
-  ([request] (layout/render request (profile-form-page {:errors []})))
-  ([request errors] (layout/render request (profile-form-page {:errors errors}))))
+  ([request] (layout/render request (pages/profile-form-page {:errors []})))
+  ([request errors] (layout/render request (pages/profile-form-page {:errors errors}))))
 
 (defn create-profile [request]
   (let [user (:params request)
