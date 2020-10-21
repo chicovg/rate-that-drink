@@ -1,7 +1,8 @@
 (ns the-beer-tasting-app.routes.pages
   (:require
    [the-beer-tasting-app.schema :as sc])
-  (:use [hiccup.def]
+  (:use [hiccup.core]
+        [hiccup.def]
         [hiccup.form]
         [ring.util.anti-forgery]))
 
@@ -192,8 +193,33 @@
       (label "drinkability" "Drinkability (0-30)")
       (rating-field "drinkability" 0 30 "Drinkability" (:drinkability beer))]
      [:div.field
-      [:label "Total"]
+      [:label "Total (0-100)"]
       [:p.total (sc/beer-total beer)]]]
+    [:div.field
+     [:div.ui.fluid.accordion
+      [:div.title
+       [:i.dropdown.icon]
+       "Tips for tasting"]
+      [:div.content
+       [:p [:strong "Appearance"]]
+       [:p [:i "Take a moment and hold the glass up in a well-lit room."]]
+       [:p "What do you see? "
+        "Is your beer cloudy or clear in appearance? "
+        "What is the consistency and color of the head? "
+        "Does it leave lacy patterns on the sides of the glass or pull away with the liquid? "
+        "How would you describe the color?"]
+       [:p [:strong "Smell"]]
+       [:p [:i "Agitate the beer slightly in the glass."]]
+       [:p "What aromas do you detect?"]
+       [:p [:strong "Taste"]]
+       [:p [:i "As the beer rests in your mouth, focus on the mouthfeel"]]
+       [:p
+        "Is it smooth, velvety, creamy, tingly or prinkly? "
+        "Is the carbonation light, champagne-like, sharp or delicate? "
+        "And is the body robust, heavy, dense, light or delicate? "
+        "How does your mouth feel after finishing your first sip—dry, or quenched?"]
+       [:p [:i "Then, take a sip. Let the beer sit in your mouth and meet with all your taste buds "
+            "Use the list of flavors to help identify the flavors that you are identifying"]]]]]
     [:div.field
      (label "comments" "Comments")
      (text-area "comments" (:comments beer))]

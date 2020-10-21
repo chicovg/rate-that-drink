@@ -23,3 +23,7 @@ body {
 .ui.menu:not(.vertical) .item > .button:not(:last-child) {
   margin-right: 8px;
 }
+.ui.form .field > label {
+  display: inline-block;
+  margin-right: .5em;
+}

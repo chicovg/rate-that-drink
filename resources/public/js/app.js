@@ -31,3 +31,11 @@ function onRatingChange() {
 ratings.forEach(function(e) {
     e.addEventListener('change', onRatingChange);
 });
+
+$('.accordion')
+  .accordion({
+    selector: {
+      trigger: '.title .icon'
+    }
+  })
+;
