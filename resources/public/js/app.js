@@ -37,5 +37,6 @@ $('.accordion')
     selector: {
       trigger: '.title .icon'
     }
-  })
-;
+  });
+
+$('table').tablesort();

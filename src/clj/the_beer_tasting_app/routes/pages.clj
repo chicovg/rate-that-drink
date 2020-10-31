@@ -27,6 +27,7 @@
     content
     [:script {:src "/assets/jquery/jquery.js"}]
     [:script {:src "/assets/Semantic-UI/semantic.min.js"}]
+    [:script {:src "/js/tablesort.js"}]
     [:script {:src "/js/app.js"}]]])
 
 (defn navbar-item
@@ -132,7 +133,7 @@
    [:div.beers-header
     [:h1 "Your Beers"]
     [:a {:href "/user/beers/new"} "Add New"]]
-   [:table#beers.ui.selectable.celled.table
+   [:table#beers.ui.sortable.selectable.celled.table
     [:thead
      [:tr
       [:th "Name"]
