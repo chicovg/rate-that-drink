@@ -1,18 +1,16 @@
-var beerTable = document.querySelector('#beers');
+var beerRows = document.querySelectorAll('#beers > tbody > tr');
 
-if (beerTable) {
-    var beerRows = beerTable.getElementsByTagName('tr');
-
-    for (row of beerRows) {
-        if (row.dataset.beerId) {
-            var link = "/user/beers/edit/" + row.dataset.beerId;
-
-            row.onclick = function() {
-                window.location = link;
-            }
+beerRows.forEach(function(row) {
+    var beerId = row.dataset.beerId;
+    if (row.children && beerId) {
+        for (var c = 0; c < row.children.length; c++) {
+            var cell = row.children.item(c);
+            cell.addEventListener('click', function() {
+                window.location = '/user/beers/edit/' + beerId;
+            });
         }
     }
-}
+});
 
 var ratings = document.querySelectorAll('.rating');
 var total = document.querySelector('.total');
@@ -32,11 +30,10 @@ ratings.forEach(function(e) {
     e.addEventListener('change', onRatingChange);
 });
 
-$('.accordion')
-  .accordion({
+$('.accordion').accordion({
     selector: {
-      trigger: '.title .icon'
-    }
-  });
+        trigger: '.title .icon',
+    },
+});
 
 $('table').tablesort();

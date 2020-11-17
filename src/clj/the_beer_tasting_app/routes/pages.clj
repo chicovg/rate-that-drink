@@ -141,10 +141,11 @@
       [:th "Style"]
       [:th.one.wide "Rating"]]]
     [:tbody
-     (for [{:keys [name
+     (for [{:keys [id
+                   name
                    brewery
                    style] :as beer} beers]
-       [:tr {:data-beer-id (:id beer)}
+       [:tr {:data-beer-id id}
         [:td {:data-label "Name"} name]
         [:td {:data-label "Brewery"} brewery]
         [:td {:data-label "Style"} style]
