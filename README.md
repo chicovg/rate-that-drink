@@ -1,8 +1,6 @@
 # the-beer-tasting-app
 
-generated using Luminus version "3.85"
-
-FIXME
+An fullstack luminus app to keep track of my beer tastings.
 
 ## Prerequisites
 
