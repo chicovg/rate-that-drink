@@ -10,7 +10,7 @@
   [:head
    [:meta {:charset "UTF-8"}]
    [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
-   [:title "The Beer Tasting App"]
+   [:title "Rate That Beer"]
    [:link {:href "/assets/Semantic-UI/semantic.min.css"
            :rel "stylesheet"
            :type "text/css"}]

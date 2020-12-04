@@ -65,11 +65,13 @@ RETURNING id
 UPDATE beers
 SET name = :name,
     brewery = :brewery,
+    style = :style,
     appearance = :appearance,
     smell = :smell,
     taste = :taste,
     aftertaste = :aftertaste,
     drinkability = :drinkability,
+    comments = :comments,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = :id
 
