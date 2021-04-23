@@ -1,0 +1,2 @@
+{:lint-as {hiccup.def/defelem clojure.core/defn}
+ :linters {:unresolved-var {:exclude [rate-that-drink.db.core]}}}

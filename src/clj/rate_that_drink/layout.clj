@@ -1,9 +1,9 @@
-(ns the-beer-tasting-app.layout
+(ns rate-that-drink.layout
   (:require
    [hiccup.core :as h]
    [ring.util.http-response :refer [content-type ok]]
    [ring.util.response]
-   [the-beer-tasting-app.routes.pages :as pages]))
+   [rate-that-drink.routes.pages :as pages]))
 
 (defn render
   [request content]

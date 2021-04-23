@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.middleware.formats
+(ns rate-that-drink.middleware.formats
   (:require
     [cognitect.transit :as transit]
     [luminus-transit.time :as time]

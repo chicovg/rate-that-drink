@@ -1,10 +1,10 @@
-(ns the-beer-tasting-app.core
+(ns rate-that-drink.core
   (:require
-    [the-beer-tasting-app.handler :as handler]
-    [the-beer-tasting-app.nrepl :as nrepl]
+    [rate-that-drink.handler :as handler]
+    [rate-that-drink.nrepl :as nrepl]
     [luminus.http-server :as http]
     [luminus-migrations.core :as migrations]
-    [the-beer-tasting-app.config :refer [env]]
+    [rate-that-drink.config :refer [env]]
     [clojure.tools.cli :refer [parse-opts]]
     [clojure.tools.logging :as log]
     [mount.core :as mount])
@@ -57,7 +57,7 @@
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]
-  (mount/start #'the-beer-tasting-app.config/env)
+  (mount/start #'rate-that-drink.config/env)
   (cond
     (nil? (:database-url env))
     (do

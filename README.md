@@ -1,4 +1,4 @@
-# the-beer-tasting-app
+# rate-that-drink
 
 generated using Luminus version "3.85"
 

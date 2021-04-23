@@ -1,13 +1,13 @@
-(ns the-beer-tasting-app.routes.home
+(ns rate-that-drink.routes.home
   (:require
    [buddy.hashers :as h]
    [ring.util.http-response :refer [content-type]]
    [ring.util.response :refer [redirect bad-request]]
-   [the-beer-tasting-app.db.core :refer [*db*] :as db]
-   [the-beer-tasting-app.layout :as layout]
-   [the-beer-tasting-app.middleware :as middleware]
-   [the-beer-tasting-app.routes.pages :as pages]
-   [the-beer-tasting-app.schema :as sc])
+   [rate-that-drink.db.core :refer [*db*] :as db]
+   [rate-that-drink.layout :as layout]
+   [rate-that-drink.middleware :as middleware]
+   [rate-that-drink.routes.pages :as pages]
+   [rate-that-drink.schema :as sc])
   (:use [ring.util.anti-forgery]
         [hiccup.core]))
 
@@ -21,7 +21,7 @@
   (let [{:keys [email pass]} (:params request)
         user (db/get-user-by-email *db* {:email email})]
     (if (h/check pass (:pass user))
-      (-> (redirect "/user/beers")
+      (-> (redirect "/user/drinks")
           (assoc-in [:session] (-> (:session request)
                                    (assoc :identity (:id user))
                                    (assoc :first_name (:first_name user)))))
@@ -34,14 +34,14 @@
 (defn create-profile [request]
   (let [user (:params request)
         session (:session request)
-        next-url (get-in request [:params :next] "/user/beers")]
+        next-url (get-in request [:params :next] "/user/drinks")]
     (let [schema-errors (sc/get-schema-errors user sc/user-schema)
           user-by-email (db/get-user-by-email user)]
       (if (empty? schema-errors)
         (if (not user-by-email)
           (if (= (:pass user) (:confirm-pass user))
             (let [encrypted-pass (h/encrypt (:pass user))
-                  identity (-> (db/create-user! *db* (assoc user :pass encrypted-pass))
+                  identity (-> (db/create-user! (assoc user :pass encrypted-pass))
                                first
                                :id)
                   updated-session (-> session

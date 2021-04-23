@@ -1,13 +1,13 @@
-(ns the-beer-tasting-app.handler
+(ns rate-that-drink.handler
   (:require
-    [the-beer-tasting-app.middleware :as middleware]
-    [the-beer-tasting-app.layout :refer [render-error]]
-    [the-beer-tasting-app.routes.home :refer [home-routes]]
-    [the-beer-tasting-app.routes.user :refer [user-routes]]
+    [rate-that-drink.middleware :as middleware]
+    [rate-that-drink.layout :refer [render-error]]
+    [rate-that-drink.routes.home :refer [home-routes]]
+    [rate-that-drink.routes.user :refer [user-routes]]
     [reitit.ring :as ring]
     [ring.middleware.content-type :refer [wrap-content-type]]
     [ring.middleware.webjars :refer [wrap-webjars]]
-    [the-beer-tasting-app.env :refer [defaults]]
+    [rate-that-drink.env :refer [defaults]]
     [mount.core :as mount]))
 
 (mount/defstate init-app

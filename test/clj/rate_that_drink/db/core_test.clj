@@ -1,19 +1,19 @@
-(ns the-beer-tasting-app.db.core-test
+(ns rate-that-drink.db.core-test
   (:require
-   [the-beer-tasting-app.db.core :refer [*db*] :as db]
+   [rate-that-drink.db.core :refer [*db*] :as db]
    [java-time.pre-java8]
    [luminus-migrations.core :as migrations]
    [clojure.test :refer :all]
    [next.jdbc :as jdbc]
-   [the-beer-tasting-app.config :refer [env]]
+   [rate-that-drink.config :refer [env]]
    [mount.core :as mount]))
 
 (use-fixtures
   :once
   (fn [f]
     (mount/start
-     #'the-beer-tasting-app.config/env
-     #'the-beer-tasting-app.db.core/*db*)
+     #'rate-that-drink.config/env
+     #'rate-that-drink.db.core/*db*)
     (migrations/migrate ["migrate"] (select-keys env [:database-url]))
     (f)))
 

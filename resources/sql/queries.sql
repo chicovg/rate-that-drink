@@ -89,3 +89,73 @@ WHERE id = :id
 -- :doc deletes the beer record with the given id
 DELETE FROM beers
 WHERE id = :id
+
+-- :name query-drinks :? :*
+-- :doc queries for drink records
+SELECT d.*,
+       ((appearance + smell + (3 * taste)) / 5.0) as rating
+FROM drink d
+WHERE user_id = :user_id
+
+-- :name get-drink :? :1
+-- :doc get a sindle drink by id
+SELECT * FROM drink
+WHERE id = :id
+
+-- :name create-drink! :<!
+-- :doc creates a new drink record
+INSERT INTO drink (
+    user_id,
+    name,
+    maker,
+    type,
+    style,
+    appearance,
+    appearance_notes,
+    smell,
+    smell_notes,
+    taste,
+    taste_notes,
+    comments,
+    created_at,
+    updated_at
+)
+VALUES (
+    :user_id,
+    :name,
+    :maker,
+    :type,
+    :style,
+    :appearance,
+    :appearance_notes,
+    :smell,
+    :smell_notes,
+    :taste,
+    :taste_notes,
+    :comments,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+RETURNING id
+
+-- :name update-drink! :! :n
+-- :doc updates an existing beer record
+UPDATE drink
+SET name = :name,
+    maker = :maker,
+    type = :type,
+    style = :style,
+    appearance = :appearance,
+    appearance_notes = :appearance_notes,
+    smell = :smell,
+    smell_notes = :smell_notes,
+    taste = :taste,
+    taste_notes = :taste_notes,
+    comments = :comments,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = :id
+
+-- :name delete-drink! :! :n
+-- :doc deletes the drink record with the given id
+DELETE FROM drink
+WHERE id = :id

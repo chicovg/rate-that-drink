@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.nrepl
+(ns rate-that-drink.nrepl
   (:require
     [nrepl.server :as nrepl]
     [clojure.tools.logging :as log]))

@@ -1,11 +1,11 @@
-(ns the-beer-tasting-app.handler-test
+(ns rate-that-drink.handler-test
   (:require
    [clojure.test :refer :all]
    [hickory.core :as h]
    [hickory.select :as s]
    [ring.mock.request :refer :all]
-   [the-beer-tasting-app.handler :refer :all]
-   [the-beer-tasting-app.middleware.formats :as formats]
+   [rate-that-drink.handler :refer :all]
+   [rate-that-drink.middleware.formats :as formats]
    [muuntaja.core :as m]
    [mount.core :as mount])
   (:use [ring.util.anti-forgery]))
@@ -43,8 +43,8 @@
 (use-fixtures
   :once
   (fn [f]
-    (mount/start #'the-beer-tasting-app.config/env
-                 #'the-beer-tasting-app.handler/app-routes)
+    (mount/start #'rate-that-drink.config/env
+                 #'rate-that-drink.handler/app-routes)
     (f)))
 
 (deftest test-home-routes

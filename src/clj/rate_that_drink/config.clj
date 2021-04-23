@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.config
+(ns rate-that-drink.config
   (:require
     [cprop.core :refer [load-config]]
     [cprop.source :as source]

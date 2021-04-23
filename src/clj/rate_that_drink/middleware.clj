@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.middleware
+(ns rate-that-drink.middleware
   (:require
    [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [buddy.auth.accessrules :refer [restrict]]
@@ -11,10 +11,10 @@
    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
    [ring.middleware.flash :refer [wrap-flash flash-request flash-response]]
    [ring.util.response :refer [redirect]]
-   [the-beer-tasting-app.env :refer [defaults]]
-   [the-beer-tasting-app.layout :refer [render render-error]]
-   [the-beer-tasting-app.middleware.formats :as formats]
-   [the-beer-tasting-app.config :refer [env]]))
+   [rate-that-drink.env :refer [defaults]]
+   [rate-that-drink.layout :refer [render render-error]]
+   [rate-that-drink.middleware.formats :as formats]
+   [rate-that-drink.config :refer [env]]))
 
 (defn wrap-internal-error [handler]
   (fn [req]

@@ -36,4 +36,25 @@ $('.accordion').accordion({
     },
 });
 
-$('table').tablesort();
+function updateDrinkTotal() {
+    var appearanceVal = $('[name=appearance]').val();
+    var smellVal = $('[name=smell]').val();
+    var tasteVal = $('[name=taste]').val();
+    var sum = new Number(appearanceVal) + new Number(smellVal) + new Number(tasteVal) * 3;
+    var averaged = sum / 5;
+
+    $('[name=total]').text(averaged.toFixed(1));
+}
+
+$(document).ready(function() {
+    $('#drinks').DataTable();
+
+    $('#drinks tbody').on('click', 'tr', function() {
+        drinkId = $(this).data('drinkId');
+        window.location = '/user/drinks/edit/' + drinkId;
+    });
+
+    $('drink-rating').ready(updateDrinkTotal);
+
+    $('.drink-rating').on('change', updateDrinkTotal);
+})

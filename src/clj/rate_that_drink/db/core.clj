@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.db.core
+(ns rate-that-drink.db.core
   (:require
     [cheshire.core :refer [generate-string parse-string]]
     [next.jdbc.date-time]
@@ -6,7 +6,8 @@
     [next.jdbc.result-set]
     [clojure.tools.logging :as log]
     [conman.core :as conman]
-    [the-beer-tasting-app.config :refer [env]]
+    [hugsql.core :as hugsql]
+    [rate-that-drink.config :refer [env]]
     [mount.core :refer [defstate]])
   (:import (org.postgresql.util PGobject)))
 
@@ -19,6 +20,8 @@
   :stop (conman/disconnect! *db*))
 
 (conman/bind-connection *db* "sql/queries.sql")
+
+(hugsql/def-sqlvec-fns "sql/queries.sql")
 
 (defn pgobj->clj [^org.postgresql.util.PGobject pgobj]
   (let [type (.getType pgobj)

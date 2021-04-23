@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.schema
+(ns rate-that-drink.schema
   (:require [struct.core :as st]))
 
 (def user-schema [[:first_name st/string st/required]
@@ -16,6 +16,18 @@
                   [:aftertaste st/number]
                   [:drinkability st/number]])
 
+(def drink-rating {:message "must be a number from 1 to 5"
+                   :optional true
+                   :validate (fn [n] (and (>= n 1)
+                                          (<= n 5)))})
+
+(def drink-schema [[:name st/string st/required]
+                   [:maker st/string st/required]
+                   [:type st/string st/required]
+                   [:appearance st/number st/required drink-rating]
+                   [:smell st/number st/required drink-rating]
+                   [:taste st/number st/required drink-rating]])
+
 (defn get-schema-errors [object schema]
   (let [schema-errors (first (st/validate object schema))]
     (if (nil? schema-errors)
@@ -24,10 +36,10 @@
         (str (name field) " " message)))))
 
 (defn parse-int [int-string]
-  (Integer/parseInt int-string))
+  (when int-string
+    (Integer/parseInt int-string)))
 
 (defn convert-beer [beer]
-  (prn beer)
   (-> beer
       (update :appearance parse-int)
       (update :smell parse-int)
@@ -39,3 +51,9 @@
   (->> [:appearance :smell :taste :aftertaste :drinkability]
       (map #(% beer 0))
       (reduce +)))
+
+(defn convert-drink [drink]
+  (-> drink
+      (update :appearance parse-int)
+      (update :smell parse-int)
+      (update :taste parse-int)))

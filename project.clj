@@ -1,7 +1,7 @@
-(defproject the-beer-tasting-app "0.1.0-SNAPSHOT"
+(defproject rate-that-drink "2.0.0-SNAPSHOT"
 
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "A drink journaling web application"
+  :url "https://github.com/chicovg/rate-that-beer"
 
   :dependencies [[buddy/buddy-auth "2.2.0"]
                  [buddy/buddy-core "1.6.0"]
@@ -47,14 +47,14 @@
   :test-paths ["test/clj"]
   :resource-paths ["resources"]
   :target-path "target/%s/"
-  :main ^:skip-aot the-beer-tasting-app.core
+  :main ^:skip-aot rate-that-drink.core
 
   :plugins [] 
 
   :profiles
   {:uberjar {:omit-source true
              :aot :all
-             :uberjar-name "the-beer-tasting-app.jar"
+             :uberjar-name "rate-that-drink.jar"
              :source-paths ["env/prod/clj" ]
              :resource-paths ["env/prod/resources"]}
 

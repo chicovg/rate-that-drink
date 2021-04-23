@@ -1,20 +1,27 @@
-(ns the-beer-tasting-app.routes.pages
+(ns rate-that-drink.routes.pages
   (:require
-   [the-beer-tasting-app.schema :as sc])
-  (:use [hiccup.core]
-        [hiccup.def]
-        [hiccup.form]
-        [ring.util.anti-forgery]))
+   [rate-that-drink.schema :as sc]
+   [hiccup.def :refer [defelem]]
+   [hiccup.form :refer [drop-down
+                        email-field
+                        label
+                        password-field
+                        text-area
+                        text-field]]
+   [ring.util.anti-forgery :refer [anti-forgery-field]]))
 
 (defn head []
   [:head
    [:meta {:charset "UTF-8"}]
    [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
-   [:title "Rate That Beer"]
+   [:title "Rate That Drink"]
    [:link {:href "/assets/Semantic-UI/semantic.min.css"
            :rel "stylesheet"
            :type "text/css"}]
    [:link {:href "/css/screen.css"
+           :rel "stylesheet"
+           :type "text/css"}]
+   [:link {:href "/css/datatables.min.css"
            :rel "stylesheet"
            :type "text/css"}]])
 
@@ -27,7 +34,7 @@
     content
     [:script {:src "/assets/jquery/jquery.js"}]
     [:script {:src "/assets/Semantic-UI/semantic.min.js"}]
-    [:script {:src "/js/tablesort.js"}]
+    [:script {:src "/js/datatables.min.js"}]
     [:script {:src "/js/app.js"}]]])
 
 (defn navbar-item
@@ -44,9 +51,9 @@
     [:div.ui.stackable.menu
      [:div.item
       [:img {:src "/img/beer.png"}]
-      [:p.app-name "Rate that beer"]]
+      [:p.app-name "Rate That Drink"]]
      (if authed?
-       (item "/user/beers" "Beers")
+       (item "/user/drinks" "Drinks")
        (item "/" "Home"))
      (if authed?
        (item "/user/logout" "Log Out")
@@ -73,8 +80,8 @@
 (defn home-page
   []
   [:div.ui.segment
-   [:h1 "Welcome to the 'Rate that beer' app"]
-   [:p "This is a place where you can rate and compare your favorite brews."]
+   [:h1 "Welcome to the 'Rate that drink' app"]
+   [:p "This is a place where you can rate and compare your favorite drink."]
    [:p "Login or sign up to get started!"]])
 
 (defn form-errors [errors]
@@ -114,12 +121,13 @@
      (text-field {:placeholder "Last Name" :required true} "last_name" (:last_name user))]
     [:div.field
      (label "email" "Email")
-     (email-field {:placeholder "Email" :required true} "email" {:email user})]
+     (email-field {:placeholder "Email" :required true} "email" (:email user))]
     ;; TODO reset password
-    (when (not user)
+    (when-not user
       [:div.field
        (label "pass" "Password")
-       (password-field {:placeholder "Password" :required true} "pass")]
+       (password-field {:placeholder "Password" :required true} "pass")])
+    (when-not user
       [:div.field
        (label "confirm-pass" "Confirm Password")
        (password-field {:placeholder "Confirm Password" :required true} "confirm-pass")])
@@ -150,6 +158,7 @@
         [:td {:data-label "Brewery"} brewery]
         [:td {:data-label "Style"} style]
         [:td {:data-label "Rating"} (sc/beer-total beer)]])]]])
+
 
 (defelem rating-field [name min max placeholder value]
   [:input.rating {:type "number"
@@ -205,6 +214,110 @@
     [:button.ui.button.primary {:type "submit"} "Submit"]
     [:a.ui.button {:href "/user/beers"} "Cancel"]]])
 
+;;
+;; Drinks
+;;
+
+(defn user-drinks-page
+  [{drinks :drinks}]
+  [:div.ui.segment
+   [:div.drinks-header
+    [:h1 "Your Drinks"]
+    [:a {:href "/user/drinks/new"} "Add New"]]
+   [:table#drinks.ui.celled.selectable.table
+    [:thead
+     [:tr
+      [:th "Name"]
+      [:th "Maker"]
+      [:th "Type"]
+      [:th "Style"]
+      [:th.one.wide "Rating"]]]
+    [:tbody
+     (for [{:keys [id
+                   name
+                   maker
+                   type
+                   style
+                   rating]}
+           drinks]
+       [:tr {:data-drink-id id}
+        [:td {:data-label "Name"}   name]
+        [:td {:data-label "Maker"}  maker]
+        [:td {:data-label "Type"}   type]
+        [:td {:data-label "Style"}  style]
+        [:td {:data-label "Rating"} (format "%.1f" rating)]])]]])
+
+(defelem drink-rating-field [name min max placeholder value]
+  [:input.drink-rating {:type "number"
+                        :name name
+                        :min min
+                        :max max
+                        :placeholder placeholder
+                        :required true
+                        :value value}])
+
+(defelem drink-rating-section [field field-label drink]
+  (let [field-name (name field)
+        notes-field-name (str field-name "_notes")
+        notes-field-key  (keyword notes-field-name)]
+    [:div
+     [:h4.ui.dividing.header field-label]
+     [:div.two.fields
+      [:div.field
+       (label field-name "Rating (1-5)")
+       (drink-rating-field field-name 1 5 field-label (field drink))]
+      [:div.field
+       (label notes-field-name "Notes")
+       (text-area {:rows 3} notes-field-name (notes-field-key drink))]]]))
+
+(defn user-drink-form-page [{:keys [drink errors]}]
+  (prn drink)
+  [:div.ui.segment
+   [:div.drinks-header
+    [:h1 (if drink "Update your drink" "Add a new drink")]
+    (when drink
+      [:a.ui.button.negative {:href (str "/user/drinks/delete/" (:id drink))} "Delete"])]
+   (form-errors errors)
+   [:form.ui.form {:method "post"}
+    [:div.two.fields
+     [:div.field
+      (label "name" "Name")
+      (text-field {:maxlength 100 :placeholder "Drink Name" :required true}
+                  "name"
+                  (:name drink))]
+     [:div.field
+      (label "brewery" "Maker")
+      (text-field {:maxlength 100 :placeholder "Maker" :required true}
+                  "maker"
+                  (:maker drink))]]
+    [:div.two.fields
+     [:div.field
+      (label "type" "Type")
+      (drop-down {:class "ui fluid dropdown"}
+                 "type"
+                 [["Beer" "beer"]
+                  ["Wine" "wine"]]
+                 (:type drink))]
+     [:div.field
+      (label "style" "Style")
+      (text-field {:maxlength 100 :placeholder "Style" :required true} "style" (:style drink))]]
+    (drink-rating-section :appearance "Appearance" drink)
+    (drink-rating-section :smell "Smell" drink)
+    (drink-rating-section :taste "Taste" drink)
+    [:div
+     [:h4.ui.dividing.header "Overall"]
+     [:div.two.fields
+      [:div.field
+       [:label "Rating (1-5)"]
+       [:p {:name "total"} (sc/drink-total drink)]]
+      [:div.field
+       (label "comments" "Comments")
+       (text-area {:rows 3} "comments" (:comments drink))]]]
+    (anti-forgery-field)
+    [:div.ui.horizontal.divider]
+    [:button.ui.button.primary {:type "submit"} "Submit"]
+    [:a.ui.button {:href "/user/drinks"} "Cancel"]]])
+
 (defn delete-beer-page [{errors :errors id :id}]
   [:div.ui.segment
    [:h1 "Please confirm"]
@@ -220,3 +333,19 @@
     [:div.ui.horizontal.divider]
     [:button.ui.button.primary {:type "submit"} "Submit"]
     [:a.ui.button {:href "/user/beers"} "Cancel"]]])
+
+(defn delete-drink-page [{errors :errors id :id}]
+  [:div.ui.segment
+   [:h1 "Please confirm"]
+   [:div.ui.warning.message
+    [:p "Are you sure that you want to delete?"]]
+   (when (not-empty errors)
+     [:div.ui.error.message
+      (for [error errors]
+        [:p error])])
+   [:form.ui.form {:method "post"}
+    (anti-forgery-field)
+    [:input {:hidden true :value id}]
+    [:div.ui.horizontal.divider]
+    [:button.ui.button.primary {:type "submit"} "Submit"]
+    [:a.ui.button {:href (str "/user/drinks/edit/" id)} "Cancel"]]])

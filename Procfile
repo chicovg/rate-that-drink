@@ -1,1 +1,1 @@
-web: java -Dclojure.main.report=stderr -cp target/uberjar/the-beer-tasting-app.jar clojure.main -m the-beer-tasting-app.core
+web: java -Dclojure.main.report=stderr -cp target/uberjar/rate-that-drink.jar clojure.main -m rate-that-drink.core

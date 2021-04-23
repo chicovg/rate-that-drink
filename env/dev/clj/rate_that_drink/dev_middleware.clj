@@ -1,4 +1,4 @@
-(ns the-beer-tasting-app.dev-middleware
+(ns rate-that-drink.dev-middleware
   (:require
     [ring.middleware.reload :refer [wrap-reload]]
     [selmer.middleware :refer [wrap-error-page]]
@@ -18,4 +18,4 @@
       wrap-reload
       wrap-error-page
       wrap-request-log
-      (wrap-exceptions {:app-namespaces ['the-beer-tasting-app]})))
+      (wrap-exceptions {:app-namespaces ['rate-that-drink]})))
