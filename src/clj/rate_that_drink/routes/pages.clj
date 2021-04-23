@@ -309,7 +309,7 @@
      [:div.two.fields
       [:div.field
        [:label "Rating (1-5)"]
-       [:p {:name "total"} (sc/drink-total drink)]]
+       [:p {:name "total"}]]
       [:div.field
        (label "comments" "Comments")
        (text-area {:rows 3} "comments" (:comments drink))]]]
