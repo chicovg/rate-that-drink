@@ -224,7 +224,7 @@
    [:div.drinks-header
     [:h1 "Your Drinks"]
     [:a {:href "/user/drinks/new"} "Add New"]]
-   [:table#drinks.ui.celled.selectable.table
+   [:table#drinks.ui.table.responsive.nowrap.unstackable
     [:thead
      [:tr
       [:th "Name"]
@@ -271,7 +271,6 @@
        (text-area {:rows 3} notes-field-name (notes-field-key drink))]]]))
 
 (defn user-drink-form-page [{:keys [drink errors]}]
-  (prn drink)
   [:div.ui.segment
    [:div.drinks-header
     [:h1 (if drink "Update your drink" "Add a new drink")]

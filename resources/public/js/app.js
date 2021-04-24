@@ -47,7 +47,15 @@ function updateDrinkTotal() {
 }
 
 $(document).ready(function() {
-    $('#drinks').DataTable();
+    $('#drinks').DataTable({
+        responsive: {
+            details: false,
+        },
+        columnDefs: [
+            { responsivePriority: 1, targets: 0 },
+            { responsivePriority: 2, targets: 4 },
+        ]
+    });
 
     $('#drinks tbody').on('click', 'tr', function() {
         drinkId = $(this).data('drinkId');

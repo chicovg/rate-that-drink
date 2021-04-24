@@ -14,6 +14,9 @@ body {
   align-self: center;
   margin-bottom: 6px;
 }
+#drinks {
+  width: 100%;
+}
 .drinks-header {
   display: flex;
   justify-content: space-between;
