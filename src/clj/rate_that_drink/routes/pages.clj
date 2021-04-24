@@ -224,7 +224,7 @@
    [:div.drinks-header
     [:h1 "Your Drinks"]
     [:a {:href "/user/drinks/new"} "Add New"]]
-   [:table#drinks.ui.table.responsive.nowrap.unstackable
+   [:table#drinks.ui.table.responsive.unstackable
     [:thead
      [:tr
       [:th "Name"]
