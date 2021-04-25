@@ -218,6 +218,13 @@
 ;; Drinks
 ;;
 
+(def drink-types
+  {"beer"  "Beer"
+   "cider" "Cider"
+   "mead"  "Mead"
+   "wine"  "Wine"
+   "other" "Other"})
+
 (defn user-drinks-page
   [{drinks :drinks}]
   [:div.ui.segment
@@ -243,7 +250,7 @@
        [:tr {:data-drink-id id}
         [:td {:data-label "Name"}   name]
         [:td {:data-label "Maker"}  maker]
-        [:td {:data-label "Type"}   type]
+        [:td {:data-label "Type"}   (get drink-types type "N/A")]
         [:td {:data-label "Style"}  style]
         [:td {:data-label "Rating"} (format "%.1f" rating)]])]]])
 
@@ -270,6 +277,7 @@
        (label notes-field-name "Notes")
        (text-area {:rows 3} notes-field-name (notes-field-key drink))]]]))
 
+
 (defn user-drink-form-page [{:keys [drink errors]}]
   [:div.ui.segment
    [:div.drinks-header
@@ -294,8 +302,7 @@
       (label "type" "Type")
       (drop-down {:class "ui fluid dropdown"}
                  "type"
-                 [["Beer" "beer"]
-                  ["Wine" "wine"]]
+                 (mapv (comp vec reverse) drink-types)
                  (:type drink))]
      [:div.field
       (label "style" "Style")
