@@ -3,6 +3,7 @@
     [rate-that-drink.middleware :as middleware]
     [rate-that-drink.layout :refer [render-error]]
     [rate-that-drink.routes.home :refer [home-routes]]
+    [rate-that-drink.routes.services :refer [service-routes]]
     [rate-that-drink.routes.user :refer [user-routes]]
     [reitit.ring :as ring]
     [ring.middleware.content-type :refer [wrap-content-type]]
@@ -19,7 +20,8 @@
   (ring/ring-handler
     (ring/router
      [(home-routes)
-      (user-routes)])
+      (user-routes)
+      (service-routes)])
     (ring/routes
       (ring/create-resource-handler
         {:path "/"})

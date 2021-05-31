@@ -11,8 +11,11 @@
   (:use [ring.util.anti-forgery]
         [hiccup.core]))
 
+;; (defn home-page [request]
+;;   (layout/render request (pages/home-page)))
+
 (defn home-page [request]
-  (layout/render request (pages/home-page)))
+  (layout/render-html request "public/index.html"))
 
 (defn get-login-page [request]
   (layout/render request (pages/login-page {:errors nil})))
@@ -34,24 +37,24 @@
 (defn create-profile [request]
   (let [user (:params request)
         session (:session request)
-        next-url (get-in request [:params :next] "/user/drinks")]
-    (let [schema-errors (sc/get-schema-errors user sc/user-schema)
-          user-by-email (db/get-user-by-email user)]
-      (if (empty? schema-errors)
-        (if (not user-by-email)
-          (if (= (:pass user) (:confirm-pass user))
-            (let [encrypted-pass (h/encrypt (:pass user))
-                  identity (-> (db/create-user! (assoc user :pass encrypted-pass))
-                               first
-                               :id)
-                  updated-session (-> session
-                                      (assoc :identity identity)
-                                      (assoc :first_name (:first_name user)))]
-              (-> (redirect next-url)
-                  (assoc :session updated-session)))
-            (get-profile-form-page request ["Passwords do not match"]))
-          (get-profile-form-page request ["A user already exists with that email address"]))
-        (get-profile-form-page request schema-errors)))))
+        next-url (get-in request [:params :next] "/user/drinks")
+        schema-errors (sc/get-schema-errors user sc/user-schema)
+        user-by-email (db/get-user-by-email user)]
+    (if (empty? schema-errors)
+      (if (not user-by-email)
+        (if (= (:pass user) (:confirm-pass user))
+          (let [encrypted-pass (h/encrypt (:pass user))
+                identity (-> (db/create-user! (assoc user :pass encrypted-pass))
+                             first
+                             :id)
+                updated-session (-> session
+                                    (assoc :identity identity)
+                                    (assoc :first_name (:first_name user)))]
+            (-> (redirect next-url)
+                (assoc :session updated-session)))
+          (get-profile-form-page request ["Passwords do not match"]))
+        (get-profile-form-page request ["A user already exists with that email address"]))
+      (get-profile-form-page request schema-errors))))
 
 (defn home-routes []
   [""

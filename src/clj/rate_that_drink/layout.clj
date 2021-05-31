@@ -1,9 +1,11 @@
 (ns rate-that-drink.layout
   (:require
    [hiccup.core :as h]
+   [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
    [ring.util.http-response :refer [content-type ok]]
    [ring.util.response]
-   [rate-that-drink.routes.pages :as pages]))
+   [rate-that-drink.routes.pages :as pages]
+   [selmer.parser :as parser]))
 
 (defn render
   [request content]
@@ -24,3 +26,15 @@
    {:status (:status details)
     :body (h/html (pages/error-page details))}
    "text/html; charset=utf-8"))
+
+(defn render-html
+  "renders the HTML template located relative to resources/html"
+  [_ template & [params]]
+  (content-type
+    (ok
+      (parser/render-file
+        template
+        (assoc params
+          :page template
+          :csrf-token *anti-forgery-token*)))
+    "text/html; charset=utf-8"))

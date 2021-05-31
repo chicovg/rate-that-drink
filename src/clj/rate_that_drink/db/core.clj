@@ -77,3 +77,10 @@
                            (apply str (rest type-name)))]
         (.setObject stmt idx (.createArrayOf conn elem-type (to-array v)))
         (.setObject stmt idx (clj->jsonb-pgobj v))))))
+
+(comment
+  (create-user! {:first_name "Test"
+                 :last_name "Testerton"
+                 :email "t.test@email.com"
+                 :pass (buddy.hashers/encrypt "pass")})
+  )

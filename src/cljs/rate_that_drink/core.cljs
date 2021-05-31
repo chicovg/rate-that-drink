@@ -16,7 +16,8 @@
 
 ;; DB
 
-(def initial-db {::drinks []})
+(def initial-db {::drinks []
+                 ::user   nil})
 
 ;; Subs
 
@@ -35,19 +36,30 @@
 (rf/reg-event-db
  ::set-login-error
  (fn [db error]
-   (assoc db :login-error error)))
+   (assoc db ::login-error error)))
+
+(rf/reg-event-db
+ ::set-error
+ (fn [db [_ type error]]
+   (assoc-in db [::error type] error)))
+
+(rf/reg-event-db
+ ::set-user
+ (fn [db [_ user]]
+   (assoc db ::user user)))
 
 (kf/reg-chain
  ::login
  (fn [_ [credentials]]
    {:http-xhrio {:method          :post
-                 :on-failure      [::set-login-error]
+                 :on-failure      [::set-error ::login]
                  :params          credentials
                  :format          (http/transit-request-format)
                  :response-format (http/transit-response-format)
                  :uri             "/api/login"}})
- (fn [{:keys [db]} [_ response]]
-   (prn "login response:" response)))
+ (fn [_ [_ response]]
+   {:dispatch-n [[::set-user response]
+                 [::nav-to [:drinks]]]}))
 
 (kf/reg-chain
  ::save-profile
