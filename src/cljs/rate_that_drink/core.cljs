@@ -1,159 +1,10 @@
 (ns rate-that-drink.core
   (:require
-   [cljsjs.semantic-ui-react :refer [Button
-                                     Container
-                                     Divider
-                                     Form
-                                     Form.Input
-                                     Header
-                                     Menu
-                                     Menu.Item
-                                     Segment]]
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
-   [reagent.core :as r]
-   [ajax.core :as http]))
-
-;; DB
-
-(def initial-db {::drinks []
-                 ::user   nil})
-
-;; Subs
-
-;; Events
-
-(rf/reg-fx
- :set-location!
- (fn [url]
-   (set! (.. js/document -location) url)))
-
-(rf/reg-event-fx
- ::nav-to
- (fn [_ [_ args]]
-   {:set-location! (kf/path-for args)}))
-
-(rf/reg-event-db
- ::set-login-error
- (fn [db error]
-   (assoc db ::login-error error)))
-
-(rf/reg-event-db
- ::set-error
- (fn [db [_ type error]]
-   (assoc-in db [::error type] error)))
-
-(rf/reg-event-db
- ::set-user
- (fn [db [_ user]]
-   (assoc db ::user user)))
-
-(kf/reg-chain
- ::login
- (fn [_ [credentials]]
-   {:http-xhrio {:method          :post
-                 :on-failure      [::set-error ::login]
-                 :params          credentials
-                 :format          (http/transit-request-format)
-                 :response-format (http/transit-response-format)
-                 :uri             "/api/login"}})
- (fn [_ [_ response]]
-   {:dispatch-n [[::set-user response]
-                 [::nav-to [:drinks]]]}))
-
-(kf/reg-chain
- ::save-profile
- (fn [_ [_ profile]]
-   (prn profile)))
-
-;; Routes
-
-(def route-info
-  [[:home     "/"         "Home"]
-   [:drinks   "/drinks"   "Drinks"]
-   [:login    "/login"    "Login"]
-   [:logout   "/logout"   "Logout"]
-   [:profile  "/profile"  "Profile"]
-   [:register "/register" "Register"]])
-
-(def routes (mapv
-             (fn [[key link _]] [link key])
-             route-info))
-
-(def route-text-map (reduce
-                     (fn [map [key _ label]] (assoc map key label))
-                     {}
-                     route-info))
-
-;; Controllers
-
-;; Views
-
-(defn route->text
-  [route]
-  (get route-text-map route))
-
-(defn navbar
-  []
-  [:> Menu {:stackable true}
-   (for [[_ route] routes]
-     ^{:key route} [:> Menu.Item
-                    {:name (name route)
-                     :on-click #(rf/dispatch [::nav-to [route]])}
-                    (route->text route)])])
-
-(defn home-page
-  []
-  [:> Segment
-   [:> Header {:as "h2"} "Home"]])
-
-(defn login-page
-  []
-  (let [email (r/atom "")
-        password (r/atom "")]
-    (fn []
-      [:> Segment
-       [:> Header {:as :h2} "Enter your email and password"]
-       [:> Form {:on-submit #(rf/dispatch [::login {:email @email
-                                                    :password @password}])}
-        [:> Form.Input {:label       "Email"
-                        :name        :email
-                        :placeholder "Email"
-                        :on-change   #(reset! email (-> % .-target .-value))
-                        :required    true
-                        :type        "email"
-                        :value       @email}]
-        [:> Form.Input {:label       "Password"
-                        :name        :password
-                        :placeholder "Password"
-                        :on-change   #(reset! password (-> % .-target .-value))
-                        :required    true
-                        :type        "password"
-                        :value       @password}]
-        [:> Divider {:horizontal true}]
-        [:> Button {:primary  true
-                    :type     :submit}
-         "Submit"]
-        [:> Button {:on-click #(rf/dispatch [::nav-to [:home]])}
-         "Cancel"]]])))
-
-(defn route-page
-  [route]
-  [:> Segment
-   [:> Header {:as :h2} (route->text route)]])
-
-(defn root-component
-  []
-  [:> Container
-   [navbar]
-   [kf/switch-route (fn [route] (-> route :data :name))
-    :home [home-page]
-    :drinks [route-page :drinks]
-    :login [login-page]
-    :logout [route-page :logout]
-    :profile [route-page :profile]
-    :register [route-page :register]
-    nil [:div "Loading..."]]])
+   [rate-that-drink.db :as db]
+   [rate-that-drink.routes :as routes]
+   [rate-that-drink.views :as views]))
 
 (defn mount-components
   ([] (mount-components true))
@@ -161,9 +12,9 @@
    (rf/clear-subscription-cache!)
    (kf/start! {:debug?         (boolean debug?)
                :hash-routing?  true
-               :initial-db     initial-db
-               :routes         routes
-               :root-component [root-component]})))
+               :initial-db     db/initial-db
+               :routes         routes/routes
+               :root-component [views/root-component]})))
 
 (defn init!
   [debug?]
