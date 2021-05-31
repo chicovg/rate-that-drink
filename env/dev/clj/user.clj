@@ -8,6 +8,7 @@
    [mount.core :as mount]
    [rate-that-drink.core :refer [start-app]]
    [rate-that-drink.db.core]
+   [rate-that-drink.figwheel :refer [start-fw stop-fw cljs]]
    [conman.core :as conman]
    [luminus-migrations.core :as migrations]))
 
