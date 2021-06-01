@@ -39,6 +39,27 @@
                  [::nav-to [:drinks]]]}))
 
 (kf/reg-chain
- ::save-profile
- (fn [_ [_ profile]]
-   (prn profile)))
+ ::create-profile
+ (fn [_ [profile]]
+   {:http-xhrio {:method          :post
+                 :on-failure      [::set-error ::create-profile]
+                 :params          profile
+                 :format          (http/transit-request-format)
+                 :response-format (http/transit-response-format)
+                 :uri             "/api/profile"}})
+ (fn [_ [_ response]]
+   {:dispatch-n [[::set-user response]
+                 [::nav-to [:drinks]]]}))
+
+(kf/reg-chain
+ ::edit-profile
+ (fn [_ [profile]]
+   {:http-xhrio {:method          :put
+                 :on-failure      [::set-error ::edit-profile]
+                 :params          profile
+                 :format          (http/transit-request-format)
+                 :response-format (http/transit-response-format)
+                 :uri             (str "/api/profile/" (:id profile))}})
+ (fn [_ [_ response]]
+   {:dispatch-n [[::set-user response]
+                 [::nav-to [:drinks]]]}))
