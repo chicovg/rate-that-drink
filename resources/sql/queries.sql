@@ -136,10 +136,10 @@ VALUES (
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
-RETURNING id
+RETURNING *
 
--- :name update-drink! :! :n
--- :doc updates an existing beer record
+-- :name update-drink! :<!
+-- :doc updates an existing drink record
 UPDATE drink
 SET name = :name,
     maker = :maker,
@@ -154,6 +154,7 @@ SET name = :name,
     comments = :comments,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = :id
+RETURNING *
 
 -- :name delete-drink! :! :n
 -- :doc deletes the drink record with the given id

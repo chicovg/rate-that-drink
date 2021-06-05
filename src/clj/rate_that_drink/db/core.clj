@@ -83,4 +83,7 @@
                  :last_name "Testerton"
                  :email "t.test@email.com"
                  :pass (buddy.hashers/encrypt "pass")})
+
+  (get-user {:id 1})
+
   )
