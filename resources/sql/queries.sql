@@ -3,7 +3,7 @@
 INSERT INTO users
 (first_name, last_name, email, pass)
 VALUES (:first_name, :last_name, :email, :pass)
-RETURNING id
+RETURNING id, first_name, last_name, email
 
 -- :name update-user! :! :n
 -- :doc updates an existing user record

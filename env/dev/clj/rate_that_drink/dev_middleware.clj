@@ -7,11 +7,11 @@
 (defn wrap-request-log [handler]
   (fn
     ([request]
-     (do (prn request)
-         (handler request)))
+     (prn request)
+     (handler request))
     ([request respond raise]
-     (do (prn request)
-         (handler request respond raise)))))
+     (prn request)
+     (handler request respond raise))))
 
 (defn wrap-dev [handler]
   (-> handler

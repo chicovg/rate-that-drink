@@ -15,7 +15,7 @@
 ;;   (layout/render request (pages/home-page)))
 
 (defn home-page [request]
-  (layout/render-html request "public/index.html"))
+  (layout/render-html request "home.html"))
 
 (defn get-login-page [request]
   (layout/render request (pages/login-page {:errors nil})))

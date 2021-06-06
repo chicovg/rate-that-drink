@@ -1,5 +1,6 @@
 (ns rate-that-drink.layout
   (:require
+   [clojure.java.io :as io]
    [hiccup.core :as h]
    [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
    [ring.util.http-response :refer [content-type ok]]
@@ -26,6 +27,8 @@
    {:status (:status details)
     :body (h/html (pages/error-page details))}
    "text/html; charset=utf-8"))
+
+(parser/set-resource-path! (io/resource "html"))
 
 (defn render-html
   "renders the HTML template located relative to resources/html"

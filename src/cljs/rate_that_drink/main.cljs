@@ -1,4 +1,4 @@
-(ns rate-that-drink.core
+(ns rate-that-drink.main
   (:require
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
@@ -6,7 +6,7 @@
    [rate-that-drink.routes :as routes]
    [rate-that-drink.views :as views]))
 
-(defn mount-components
+(defn ^:dev/after-load mount-components
   ([] (mount-components true))
   ([debug?]
    (rf/clear-subscription-cache!)

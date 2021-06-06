@@ -19,7 +19,8 @@
                                     no-content
                                     not-found
                                     ok
-                                    unauthorized]]))
+                                    unauthorized]]
+   [clojure.string :as str]))
 
 (defn service-routes []
   ["/api"
@@ -105,15 +106,14 @@
                             (bad-request {:error "The provided passwords to not match"})
 
                             :else
-                            (let [created-user-id (-> user
-                                                      (assoc :pass (h/encrypt password))
-                                                      db/create-user!
-                                                      first
-                                                      :id)
-                                  response        (select-keys user [:email :first_name :last_name])]
-                              (-> (created (assoc response :id created-user-id))
-                                  (assoc :session (assoc session :identity created-user-id
-                                                         :first_name (:first_name user))))))))}}]
+                            (let [created-user (-> user
+                                                   (assoc :pass (h/encrypt password))
+                                                   db/create-user!
+                                                   first)
+                                  updated-session (assoc session :identity (:id created-user)
+                                                                 :first_name (:first_name created-user))]
+                              (-> (created (str "/api/profile") created-user)
+                                  (assoc :session updated-session))))))}}]
 
     ["/{id}"
      {:put {:summary "Update an existing user profile"

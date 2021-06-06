@@ -1,6 +1,6 @@
-(ns^:figwheel-no-load rate-that-drink.app
+(ns rate-that-drink.app
   (:require
-    [rate-that-drink.core :as core]
+    [rate-that-drink.main :as main]
     [cljs.spec.alpha :as s]
     [expound.alpha :as expound]
     [devtools.core :as devtools]))
@@ -16,4 +16,4 @@
 
 (devtools/install!)
 
-(core/init! true)
+(main/init! true)

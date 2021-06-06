@@ -1,14 +1,15 @@
 (ns rate-that-drink.views
   (:require
-   [cljsjs.semantic-ui-react :refer [Button
-                                     Container
-                                     Divider
-                                     Form
-                                     Form.Input
-                                     Header
-                                     Menu
-                                     Menu.Item
-                                     Segment]]
+   ["semantic-ui-react" :refer [Button
+                                Container
+                                Divider
+                                Form
+                                Form.Input
+                                Header
+                                Menu
+                                Menu.Item
+                                Segment]]
+   [clojure.string :as st]
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
    [reagent.core :as r]
@@ -40,94 +41,104 @@
   [atm field]
   (get @atm field ""))
 
+(defn nil-if-blank
+  [s]
+  (when-not (st/blank? s) s))
+
+(defn values-from-submit
+  [fields submit-event]
+  (let [named-coll (-> submit-event
+                       .-target
+                       .-elements)]
+    (into {} (for [f fields
+                   :let [item (some-> named-coll (.namedItem (name f)))]
+                   :when (not (nil? item))]
+               [f (-> item .-value nil-if-blank)]))))
+
 (defn login-page
   []
-  (let [email (r/atom "")
-        password (r/atom "")
-        credentials (r/atom {})]
-    (fn []
-      [:> Segment
-       [:> Header {:as :h2} "Enter your email and password"]
-       [:> Form {:on-submit #(rf/dispatch [::events/login @credentials])}
-        [:> Form.Input {:label       "Email"
-                        :name        :email
-                        :placeholder "Email"
-                        :on-change   #(swap! credentials assoc :email (e->value %))
-                        :required    true
-                        :type        "email"
-                        :value       (get-value credentials :email)}]
-        [:> Form.Input {:label       "Password"
-                        :name        :password
-                        :placeholder "Password"
-                        :on-change   #(swap! credentials assoc :password (e->value %))
-                        :required    true
-                        :type        "password"
-                        :value       (get-value credentials :password)}]
-        [:> Divider {:horizontal true}]
-        [:> Button {:primary  true
-                    :type     :submit}
-         "Submit"]
-        [:> Button {:on-click #(rf/dispatch [::events/nav-to [:home]])
-                    :type     :button}
-         "Cancel"]]])))
+  (let [field-values [:email :password]
+        on-submit (fn [submit]
+                    (let [credentials (values-from-submit field-values submit)]
+                      (rf/dispatch [::events/login credentials])))]
+    [:> Segment
+     [:> Header {:as :h2} "Enter your email and password"]
+     [:> Form {:on-submit on-submit}
+      [:> Form.Input {:label       "Email"
+                      :name        :email
+                      :placeholder "Email"
+                      :required    true
+                      :type        "email"}]
+      [:> Form.Input {:label       "Password"
+                      :name        :password
+                      :placeholder "Password"
+                      :required    true
+                      :type        "password"}]
+      [:> Divider {:horizontal true}]
+      [:> Button {:primary  true
+                  :type     :submit}
+       "Submit"]
+      [:> Button {:on-click #(rf/dispatch [::events/nav-to [:home]])
+                  :type     :button}
+       "Cancel"]]]))
 
 (defn profile-page
   []
-  (let [saved-user @(rf/subscribe [::subs/user])
-        user       (r/atom saved-user)
-        is-edit?   (not (nil? (:id saved-user)))]
-    (fn []
-      [:> Segment
-       [:> Header {:as :h1} (if is-edit?
-                              "Edit your profile"
-                              "Create a new profile")]
-       [:> Form {:on-submit (if is-edit?
-                              #(rf/dispatch [::events/edit-profile @user])
-                              #(rf/dispatch [::events/create-profile @user]))}
-        [:> Form.Input {:label       "First Name"
-                        :name        :first_name
-                        :placeholder "First Name"
-                        :on-change   #(swap! user assoc :first_name (e->value %))
-                        :required    true
-                        :value       (get-value user :first_name)}]
-        [:> Form.Input {:label       "Last Name"
-                        :name        :last_name
-                        :placeholder "Last Name"
-                        :on-change   #(swap! user assoc :last_name (e->value %))
-                        :required    true
-                        :value       (get-value user :last_name)}]
-        [:> Form.Input {:label       "Email"
-                        :name        :email
-                        :placeholder "Email"
-                        :on-change   #(swap! user assoc :email (e->value %))
-                        :required    true
-                        :type        "email"
-                        :value       (get-value user :email)}]
-        (when-not saved-user
-          [:<>
-           [:> Form.Input {:label       "Password"
-                           :name        :password
-                           :placeholder "Password"
-                           :on-change   #(swap! user assoc :password (e->value %))
-                           :required    true
-                           :type        "password"
-                           :value       (get-value user :password)}]
-           [:> Form.Input {:label       "Confirm Password"
-                           :name        :password-confirm
-                           :placeholder "Confirm Password"
-                           :on-change   #(swap! user assoc :password_confirm (e->value %))
-                           :required    true
-                           :type        "password"
-                           :value       (get-value user :password_confirm)}]])
-        [:> Divider {:horizontal true}]
-        [:> Button {:primary  true
-                    :type     :submit}
-         "Submit"]
-        [:> Button {:on-click (if is-edit?
-                                #(rf/dispatch [::events/nav-to [:drinks]])
-                                #(rf/dispatch [::events/nav-to [:home]]))
-                    :type     :button}
-         "Cancel"]]])))
+  (let [saved-user      @(rf/subscribe [::subs/user])
+        is-edit?        (not (nil? (:id saved-user)))
+        field-names     [:first_name
+                         :last_name
+                         :email
+                         :password
+                         :password_confirm]
+        on-submit (fn [submit]
+                    (let [user (values-from-submit field-names submit)]
+                      (if is-edit?
+                        (rf/dispatch [::events/edit-profile user])
+                        (rf/dispatch [::events/create-profile user])))
+                    (prn (values-from-submit field-names submit)))]
+    [:> Segment
+     [:> Header {:as :h1} (if is-edit?
+                            "Edit your profile"
+                            "Create a new profile")]
+     [:> Form {:on-submit on-submit}
+      [:> Form.Input {:default-value (:first_name saved-user)
+                      :label         "First Name"
+                      :name          :first_name
+                      :placeholder   "First Name"
+                      :required      true}]
+      [:> Form.Input {:default-value (:last_name saved-user)
+                      :label         "Last Name"
+                      :name          :last_name
+                      :placeholder   "Last Name"
+                      :required      true}]
+      [:> Form.Input {:default-value (:email saved-user)
+                      :label         "Email"
+                      :name          :email
+                      :placeholder   "Email"
+                      :required      true
+                      :type          "email"}]
+      (when-not is-edit?
+        [:<>
+         [:> Form.Input {:label       "Password"
+                         :name        :password
+                         :placeholder "Password"
+                         :required    true
+                         :type        "password"}]
+         [:> Form.Input {:label       "Confirm Password"
+                         :name        :password_confirm
+                         :placeholder "Confirm Password"
+                         :required    true
+                         :type        "password"}]])
+      [:> Divider {:horizontal true}]
+      [:> Button {:primary  true
+                  :type     :submit}
+       "Submit"]
+      [:> Button {:on-click (if is-edit?
+                              #(rf/dispatch [::events/nav-to [:drinks]])
+                              #(rf/dispatch [::events/nav-to [:home]]))
+                  :type     :button}
+       "Cancel"]]]))
 
 (defn route-page
   [route]
