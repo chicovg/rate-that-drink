@@ -1,19 +1,31 @@
 (ns rate-that-drink.routes)
 
-(def route-info
-  [[:home     "/"         "Home"]
-   [:drinks   "/drinks"   "Drinks"]
-   [:login    "/login"    "Login"]
-   [:logout   "/logout"   "Logout"]
-   [:profile  "/profile"  "Profile"]
-   [:register "/register" "Register"]])
+(defrecord RouteInfo [key path label on-logout? on-login?])
 
-(def routes (mapv
-             (fn [[key link _]] [link key])
-             route-info))
+(defn to-route [^RouteInfo {:keys [key path]}]
+  [path key])
+
+(def route-info
+  [(->RouteInfo :home     "/"         "Home"     true  true)
+   (->RouteInfo :drinks   "/drinks"   "Drinks"   false true)
+   (->RouteInfo :login    "/login"    "Login"    true  false)
+   (->RouteInfo :logout   "/logout"   "Logout"   false true)
+   (->RouteInfo :profile  "/profile"  "Profile"  false true)
+   (->RouteInfo :register "/register" "Register" true  false)])
+
+(def routes (mapv to-route route-info))
+
+(defn visible-routes
+  [logged-in?]
+  (->> route-info
+       (filter (fn [{:keys [on-login? on-logout?]}]
+                     (or
+                      (and logged-in? on-login?)
+                      (and (not logged-in?) on-logout?))))
+       vec))
 
 (def route-text-map (reduce
-                     (fn [map [key _ label]] (assoc map key label))
+                     (fn [map {:keys [key label]}] (assoc map key label))
                      {}
                      route-info))
 

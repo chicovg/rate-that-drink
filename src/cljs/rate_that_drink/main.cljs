@@ -2,6 +2,7 @@
   (:require
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
+   [rate-that-drink.controllers]
    [rate-that-drink.db :as db]
    [rate-that-drink.routes :as routes]
    [rate-that-drink.views :as views]))

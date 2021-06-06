@@ -3,6 +3,11 @@
             [rate-that-drink.db :as db]))
 
 (rf/reg-sub
- ::user
+ ::loading?
  (fn [db]
-   (::db/user db)))
+   (-> db ::db/loading? not-empty boolean)))
+
+(rf/reg-sub
+ ::profile
+ (fn [db]
+   (::db/profile db)))
