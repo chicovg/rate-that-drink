@@ -3,6 +3,7 @@
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
    [ajax.core :as http]
+   [rate-that-drink.common :as common]
    [rate-that-drink.db :as db]))
 
 ;; FX
@@ -43,6 +44,31 @@
  ::set-profile
  (fn [db [_ profile]]
    (assoc db ::db/profile profile)))
+
+(rf/reg-event-db
+ ::set-drinks-filter
+ (fn [{::db/keys [drinks
+                  drinks-page
+                  drinks-page-size]
+       :as db} [_ drinks-filter]]
+   (let [filtered-page-count (->> drinks
+                                  (common/filter-drinks drinks-filter)
+                                  (common/drinks-page-count drinks-page-size))
+         corrected-drinks-page (if (>= drinks-page filtered-page-count)
+                                 (dec filtered-page-count)
+                                 drinks-page)]
+     (assoc db ::db/drinks-filter drinks-filter
+               ::db/drinks-page   corrected-drinks-page))))
+
+(rf/reg-event-db
+ ::inc-drinks-page
+ (fn [db _]
+   (update db ::db/drinks-page inc)))
+
+(rf/reg-event-db
+ ::dec-drinks-page
+ (fn [db _]
+   (update db ::db/drinks-page dec)))
 
 ;; Chains
 

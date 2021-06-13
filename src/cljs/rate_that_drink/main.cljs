@@ -1,5 +1,6 @@
 (ns rate-that-drink.main
   (:require
+   [breaking-point.core :as bp]
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
    [rate-that-drink.controllers]
@@ -11,6 +12,11 @@
   ([] (mount-components true))
   ([debug?]
    (rf/clear-subscription-cache!)
+   (rf/dispatch-sync [::bp/set-breakpoints
+                      {:breakpoints [:mobile 768
+                                     :tablet 992
+                                     :small-monitor 1200
+                                     :large-monitor]}])
    (kf/start! {:debug?         (boolean debug?)
                :hash-routing?  true
                :initial-db     db/initial-db

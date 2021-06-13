@@ -7,10 +7,21 @@
                                 Form
                                 Form.Input
                                 Header
+                                Icon
+                                Input
                                 Loader
                                 Menu
                                 Menu.Item
-                                Segment]]
+                                Panel
+                                Segment
+                                Table
+                                Table.Body
+                                Table.Cell
+                                Table.Footer
+                                Table.Header
+                                Table.HeaderCell
+                                Table.Row]]
+   [breaking-point.core :as bp]
    [clojure.string :as st]
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
@@ -24,6 +35,9 @@
         logged-in? (not (nil? profile))
         routes     (visible-routes logged-in?)]
     [:> Menu {:stackable true}
+     [:> Menu.Item
+      [:img {:src "/img/beer.png"}]
+      [:p.app-name "Rate That Drink"]]
      (for [{:keys [key label]} routes]
        ^{:key key} [:> Menu.Item
                     {:name (name key)
@@ -155,6 +169,135 @@
                  :on-cancel (fn []
                               (rf/dispatch [::events/nav-to [:drinks]]))}])
 
+;; TODO fancy table shit
+;; need the following state in db
+;; ::db/drinks-table-params {:page
+;;                           :filter
+;;                           :sort {:field
+;;                                  :asc? T/F}}
+;; 1. pagination
+;; 2. filter
+;; 3. sort
+;;
+;; -- store params in db
+;; -- put params in route (will allow deep-linking)
+;; -- controller takes params, sets them in db
+;; -- table actions modify route.
+;;     - use nav-to?
+
+(defrecord Column [key label mobile?])
+
+(def all-columns
+  [(->Column :name       "Name"       true)
+   (->Column :maker      "Maker"      true)
+   (->Column :type       "Type"       false)
+   (->Column :style      "Style"      false)
+   (->Column :appearance "Appearance" false)
+   (->Column :smell      "Smell"      false)
+   (->Column :taste      "Taste"      false)
+   (->Column :total      "Rating"     true)])
+
+(defn drinks-table-menu
+  [{:keys [page page-count]}]
+  [:div {:style {:display         :flex
+                 :justify-content :space-between}}
+   [:p (str "Page " (inc page) " of " page-count)]
+   [:> Input {:icon        "search"
+              :placeholder "Search..."
+              :on-change   #(rf/dispatch [::events/set-drinks-filter
+                                          (-> % .-target .-value)])}]])
+
+(defn drinks-table-header
+  [{:keys [columns]}]
+  [:> Table.Header
+   [:> Table.Row
+    (for [{:keys [key label]} columns]
+      ^{:key key}
+      [:> Table.HeaderCell label])]])
+
+(defn drinks-table-body
+  [{:keys [columns drinks]}]
+  [:> Table.Body
+   (for [drink drinks]
+     ^{:key (:id drink)}
+     [:> Table.Row
+      (for [{key :key} columns]
+        ^{:key key}
+        [:> Table.Cell {:on-click #(prn (:id drink))}
+         (get drink key)])])])
+
+;; TODO data needed:
+;; current page
+;; list of possible pages
+;;
+;; need to determine how may pages is too many and abbreviate
+;;   - take n on either side
+;; what about mobile??
+;;   - take a smaller n?
+;;   - doesn't work at all with stackable table, move it to a separate menu
+(defn drinks-table-footer
+  [{:keys [col-count page pages]}]
+  [:> Table.Footer
+   [:> Table.Row
+    [:> Table.HeaderCell {:colSpan col-count}
+     [:> Menu {:floated "right"}
+      [:> Menu.Item {:as "a"}
+       [:> Icon {:name "chevron left"}]]
+      (for [p pages]
+        ^{:key p} [:> Menu.Item {:active (= p page)
+                                 :as "a"}
+                   (inc p)])
+      [:> Menu.Item {:as "a"}
+       [:> Icon {:name "chevron right"}]]]]]])
+
+(defn drinks-table
+  [{:keys [columns drinks]}]
+  [:> Table {:compact    true
+             :selectable true
+             :stackable  true
+             :striped    true}
+   [drinks-table-header {:columns columns}]
+   [drinks-table-body   {:columns columns
+                         :drinks  drinks}]])
+
+(defn drinks-table-footer-menu
+  [{:keys [page pages]}]
+  [:div {:style {:display "flex"
+                 :justify-content "flex-end"}}
+   [:> Menu
+    [:> Menu.Item {:as "a"
+                   :on-click #(rf/dispatch [::events/dec-drinks-page])}
+     [:> Icon {:name "chevron left"}]]
+    (for [p pages]
+      ^{:key p} [:> Menu.Item {:active (= p page)
+                               :as "a"}
+                 (inc p)])
+    [:> Menu.Item {:as "a"
+                   :on-click #(rf/dispatch [::events/inc-drinks-page])}
+     [:> Icon {:name "chevron right"}]]]])
+
+
+(defn drinks-page
+  []
+  (let [is-mobile? @(rf/subscribe [::bp/mobile?])
+        columns    (->> all-columns
+                        (filter #(or (not is-mobile?)
+                                     (:mobile? %))))
+        drinks     @(rf/subscribe [::subs/paginated-drinks])
+        page       @(rf/subscribe [::subs/drinks-page])
+        page-count @(rf/subscribe [::subs/drinks-page-count])
+        pages      @(rf/subscribe [::subs/drinks-pages])]
+    [:> Segment
+     [:> Header {:as :h2} "Your Drinks"]
+     [drinks-table-menu {:page       page
+                         :page-count page-count}]
+     [drinks-table {:columns columns
+                    :drinks  drinks
+                    :page    page
+                    :pages   pages}]
+     [drinks-table-footer-menu {:page  page
+                                :pages pages}]]))
+
 (defn route-page
   [route]
   [:> Segment
@@ -167,11 +310,10 @@
      [navbar]
      [:> Dimmer {:active loading?
                  :inverted true}
-      [:> Loader {:inverted true}
-       "Loading"]]
+      [:> Loader {:inverted true} "Loading"]]
      [kf/switch-route (fn [route] (-> route :data :name))
       :home [home-page]
-      :drinks [route-page :drinks]
+      :drinks [drinks-page]
       :login [login-page]
       :logout [route-page :logout]
       :profile [edit-profile-page]

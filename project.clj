@@ -7,6 +7,7 @@
                  [buddy/buddy-core "1.6.0"]
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
+                 [breaking-point "0.1.2"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [cheshire "5.10.0"]
                  [cljs-ajax "0.8.0"]
@@ -74,7 +75,8 @@
      :output-dir "target/cljsbuild/public/js"
      :asset-path "/js"
      :modules    {:app {:entries [rate-that-drink.app]}}
-     :devtools   {:watch-dir "resources/public"}}
+     :devtools   {:watch-dir "resources/public"}
+     :compiler-options {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}}
     :test
     {:target :node-test
      :output-to "target/test/test.js"
