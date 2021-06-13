@@ -266,16 +266,18 @@
                  :justify-content "flex-end"}}
    [:> Menu
     [:> Menu.Item {:as "a"
+                   :disabled (zero? page)
                    :on-click #(rf/dispatch [::events/dec-drinks-page])}
      [:> Icon {:name "chevron left"}]]
     (for [p pages]
       ^{:key p} [:> Menu.Item {:active (= p page)
-                               :as "a"}
+                               :as "a"
+                               :on-click #(rf/dispatch [::events/set-drinks-page p])}
                  (inc p)])
     [:> Menu.Item {:as "a"
+                   :disabled (= page (last pages))
                    :on-click #(rf/dispatch [::events/inc-drinks-page])}
      [:> Icon {:name "chevron right"}]]]])
-
 
 (defn drinks-page
   []

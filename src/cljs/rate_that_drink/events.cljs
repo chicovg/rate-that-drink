@@ -61,6 +61,11 @@
                ::db/drinks-page   corrected-drinks-page))))
 
 (rf/reg-event-db
+ ::set-drinks-page
+ (fn [db [_ p]]
+   (assoc db ::db/drinks-page p)))
+
+(rf/reg-event-db
  ::inc-drinks-page
  (fn [db _]
    (update db ::db/drinks-page inc)))
