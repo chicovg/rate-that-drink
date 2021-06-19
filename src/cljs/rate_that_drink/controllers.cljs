@@ -4,8 +4,8 @@
 
 (kf/reg-controller
  ::profile
- {:params (constantly true)
-  :start (fn [_] [::events/load-profile])})
+ {:params (fn [route] (-> route :data :name))
+  :start (fn [_ route-name] [::events/load-profile route-name])})
 
 (kf/reg-controller
  ::drinks

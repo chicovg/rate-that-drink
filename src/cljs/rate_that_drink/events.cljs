@@ -4,7 +4,9 @@
    [re-frame.core :as rf]
    [ajax.core :as http]
    [rate-that-drink.common :as common]
-   [rate-that-drink.db :as db]))
+   [rate-that-drink.db :as db]
+   [rate-that-drink.errors :as errors]
+   [rate-that-drink.routes :as routes]))
 
 ;; FX
 
@@ -99,9 +101,15 @@
                    :on-failure      [::set-error ::load-profile]
                    :response-format (http/transit-response-format)
                    :uri             "/api/profile"}}))
- (fn [_ [profile]]
-   {:dispatch-n [[::set-profile profile]
-                 [::unset-loading? :profile]]}))
+ (fn [_ [route-name profile]]
+   (if (and (nil? profile)
+            (routes/requires-profile? route-name))
+     {:dispatch-n [[::set-profile nil]
+                   [::unset-loading? :profile]
+                   [::set-error :login ::errors/session-expired]
+                   [::nav-to [:login]]]}
+     {:dispatch-n [[::set-profile profile]
+                   [::unset-loading? :profile]]})))
 
 (kf/reg-chain
  ::create-profile

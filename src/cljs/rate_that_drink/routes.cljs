@@ -15,6 +15,11 @@
 
 (def routes (mapv to-route route-info))
 
+(def requires-profile? (->> route-info
+                            (filter :on-login?)
+                            :key
+                            set))
+
 (defn visible-routes
   [logged-in?]
   (->> route-info

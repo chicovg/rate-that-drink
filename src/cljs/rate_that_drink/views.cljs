@@ -12,7 +12,8 @@
                                 Loader
                                 Menu
                                 Menu.Item
-                                Panel
+                                Message
+                                Message.Header
                                 Segment
                                 Table
                                 Table.Body
@@ -26,6 +27,7 @@
    [kee-frame.core :as kf]
    [re-frame.core :as rf]
    [rate-that-drink.events :as events]
+   [rate-that-drink.errors :as errors]
    [rate-that-drink.routes :refer [route->text visible-routes]]
    [rate-that-drink.subs :as subs]))
 
@@ -69,6 +71,14 @@
                    :when (not (nil? item))]
                [f (-> item .-value nil-if-blank)]))))
 
+(defn error-message
+  [{:keys [error-key on-dismiss]}]
+  (when-let [{:keys [header message]} (get errors/error-texts error-key)]
+    [:> Message {:error true
+                 :on-dismiss on-dismiss}
+     [:> Message.Header header]
+     message]))
+
 (defn login-page
   []
   (let [field-values [:email :password]
@@ -77,6 +87,8 @@
                       (rf/dispatch [::events/login credentials])))]
     [:> Segment
      [:> Header {:as :h2} "Enter your email and password"]
+     [error-message {:error-key @(rf/subscribe [::subs/error :login])
+                     :on-dismiss #(rf/dispatch [::events/set-error :login nil])}]
      [:> Form {:on-submit on-submit}
       [:> Form.Input {:label       "Email"
                       :name        :email
@@ -175,13 +187,9 @@
 ;;                           :filter
 ;;                           :sort {:field
 ;;                                  :asc? T/F}}
-;; 1. pagination
-;; 2. filter
-;; 3. sort
+;; - sort
+;; - edit items
 ;;
-;; -- store params in db
-;; -- put params in route (will allow deep-linking)
-;; -- controller takes params, sets them in db
 ;; -- table actions modify route.
 ;;     - use nav-to?
 
@@ -226,15 +234,6 @@
         [:> Table.Cell {:on-click #(prn (:id drink))}
          (get drink key)])])])
 
-;; TODO data needed:
-;; current page
-;; list of possible pages
-;;
-;; need to determine how may pages is too many and abbreviate
-;;   - take n on either side
-;; what about mobile??
-;;   - take a smaller n?
-;;   - doesn't work at all with stackable table, move it to a separate menu
 (defn drinks-table-footer
   [{:keys [col-count page pages]}]
   [:> Table.Footer

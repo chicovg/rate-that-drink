@@ -41,6 +41,11 @@
  (fn [db] (::db/drinks-page-size db)))
 
 (rf/reg-sub
+ ::error
+ (fn [db [_ type]]
+   (get-in db [::db/error type])))
+
+(rf/reg-sub
  ::filtered-drinks
  :<- [::drinks]
  :<- [::drinks-filter]
