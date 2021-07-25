@@ -86,11 +86,11 @@
     [""
      {:get {:summary "Get the current authenticated profile, returns nothing if not authenticated"
             :responses {200 {:body ::t/profile-response}
-                        204 {:body nil}}
+                        401 {:body ::t/unauthorized-response}}
             :handler (fn [{{identity :identity} :session}]
                        (if-let [user (db/get-user {:id identity})]
                          (ok user)
-                         (no-content)))}
+                         (unauthorized t/unauthorized-response-body)))}
       :post {:summary "Create a new user profile"
              :parameters {:body ::t/post-profile-body-params}
              :responses {201 {:body ::t/profile-response}

@@ -6,18 +6,20 @@
   [path key])
 
 (def route-info
-  [(->RouteInfo :home     "/"         "Home"     true  true)
-   (->RouteInfo :drinks   "/drinks"   "Drinks"   false true)
-   (->RouteInfo :login    "/login"    "Login"    true  false)
-   (->RouteInfo :logout   "/logout"   "Logout"   false true)
-   (->RouteInfo :profile  "/profile"  "Profile"  false true)
-   (->RouteInfo :register "/register" "Register" true  false)])
+  [(->RouteInfo :home       "/"           "Home"       true  true)
+   (->RouteInfo :edit-drink "/drink/{id}" "Edit Drink" false false)
+   (->RouteInfo :drinks     "/drinks"     "Drinks"     false true)
+   (->RouteInfo :login      "/login"      "Login"      true  false)
+   (->RouteInfo :logout     "/logout"     "Logout"     false true)
+   (->RouteInfo :new-drink  "/drink"      "Add Drink"  false false)
+   (->RouteInfo :profile    "/profile"    "Profile"    false true)
+   (->RouteInfo :register   "/register"   "Register"   true  false)])
 
 (def routes (mapv to-route route-info))
 
 (def requires-profile? (->> route-info
-                            (filter :on-login?)
-                            :key
+                            (remove :on-logout?)
+                            (map :key)
                             set))
 
 (defn visible-routes

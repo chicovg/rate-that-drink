@@ -19,3 +19,14 @@
     (count $)
     (/ $ drinks-page-size)
     (.ceil js/Math $)))
+
+(defn calculate-ratings-total
+  [{:keys [appearance
+           smell
+           taste]
+    :or {appearance 0
+         smell      0
+         taste      0}}]
+  (-> (+ appearance smell (* 3 taste))
+      (/ 5)
+      (.toFixed 1)))

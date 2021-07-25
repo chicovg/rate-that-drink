@@ -5,8 +5,7 @@
    [ajax.core :as http]
    [rate-that-drink.common :as common]
    [rate-that-drink.db :as db]
-   [rate-that-drink.errors :as errors]
-   [rate-that-drink.routes :as routes]))
+   [rate-that-drink.errors :as errors]))
 
 ;; FX
 
@@ -18,7 +17,7 @@
 (rf/reg-event-fx
  ::nav-to
  (fn [_ [_ args]]
-   {:set-location! (kf/path-for args)}))
+   {:navigate-to args}))
 
 ;; Setters
 
@@ -56,9 +55,10 @@
    (let [filtered-page-count (->> drinks
                                   (common/filter-drinks drinks-filter)
                                   (common/drinks-page-count drinks-page-size))
-         corrected-drinks-page (if (>= drinks-page filtered-page-count)
-                                 (dec filtered-page-count)
-                                 drinks-page)]
+         corrected-drinks-page (cond
+                                 (and (zero? drinks-page) (pos? filtered-page-count)) 1
+                                 (> drinks-page filtered-page-count) filtered-page-count
+                                 :else drinks-page)]
      (assoc db ::db/drinks-filter drinks-filter
                ::db/drinks-page   corrected-drinks-page))))
 
@@ -68,14 +68,44 @@
    (assoc db ::db/drinks-page p)))
 
 (rf/reg-event-db
- ::inc-drinks-page
- (fn [db _]
-   (update db ::db/drinks-page inc)))
+ ::set-selected-drink-id
+ (fn [db [_ id]]
+   (assoc db ::db/selected-drink-id id)))
 
 (rf/reg-event-db
- ::dec-drinks-page
- (fn [db _]
-   (update db ::db/drinks-page dec)))
+ ::set-drinks-sort
+ (fn [db [_ sort-field]]
+   (let [flip-sort-direction       (fn [dir]
+                                     (condp = dir
+                                       :ascending  :descending
+                                       :descending :ascending
+                                       nil         :ascending))
+         {:keys [field direction]} (::db/drinks-sort db)]
+     (assoc db ::db/drinks-sort {:field     sort-field
+                                 :direction (flip-sort-direction
+                                             (when (= field sort-field)
+                                               direction))}))))
+
+;; Events
+
+(rf/reg-event-fx
+ ::handle-error
+ (fn [_ [_ op {:keys [status]}]]
+   (cond
+     (= 401 status)
+     {:dispatch-n  [[::set-error :login ::errors/session-expired]
+                    [::unset-loading? op]]
+      :navigate-to [:login]}
+
+     :else
+     {:dispatch [::set-error :unknown ::errors/unknown]})))
+
+(rf/reg-event-fx
+ ::select-drink
+ (fn [{::db/keys [drinks]} [_ id]]
+   (if (some #(= id (:id %)) drinks)
+     {:dispatch [::set-selected-drink-id id]}
+     {:navigate-to [:drinks]})))
 
 ;; Chains
 
@@ -83,7 +113,7 @@
  ::login
  (fn [_ [credentials]]
    {:http-xhrio {:method          :post
-                 :on-failure      [::set-error ::login]
+                 :on-failure      [::handle-error ::login]
                  :params          credentials
                  :format          (http/transit-request-format)
                  :response-format (http/transit-response-format)
@@ -94,22 +124,15 @@
 
 (kf/reg-chain
  ::load-profile
- (fn [{db :db} _]
-   (when-not (::db/profile db)
-     {:dispatch [::set-loading? :profile]
-      :http-xhrio {:method          :get
-                   :on-failure      [::set-error ::load-profile]
-                   :response-format (http/transit-response-format)
-                   :uri             "/api/profile"}}))
- (fn [_ [route-name profile]]
-   (if (and (nil? profile)
-            (routes/requires-profile? route-name))
-     {:dispatch-n [[::set-profile nil]
-                   [::unset-loading? :profile]
-                   [::set-error :login ::errors/session-expired]
-                   [::nav-to [:login]]]}
+ (fn [_ _]
+   {:dispatch [::set-loading? ::load-profile]
+    :http-xhrio {:method          :get
+                 :on-failure      [::handle-error ::load-profile]
+                 :response-format (http/transit-response-format)
+                 :uri             "/api/profile"}})
+ (fn [_ [profile]]
      {:dispatch-n [[::set-profile profile]
-                   [::unset-loading? :profile]]})))
+                   [::unset-loading? ::load-profile]]}))
 
 (kf/reg-chain
  ::create-profile
@@ -141,8 +164,32 @@
  ::load-drinks
  (fn [_ _]
    {:http-xhrio {:method          :get
-                 :on-failure      [::set-error ::load-drinks]
+                 :on-failure      [::handle-error ::load-drinks]
                  :response-format (http/transit-response-format)
                  :uri             "/api/drinks"}})
  (fn [_ [drinks]]
    {:dispatch [::set-drinks drinks]}))
+
+(kf/reg-chain
+ ::create-drink
+ (fn [_ [drink]]
+   {:http-xhrio {:method          :post
+                 :on-failure      [::set-error ::create-drink]
+                 :params          drink
+                 :format          (http/transit-request-format)
+                 :response-format (http/transit-response-format)
+                 :uri             "/api/drinks"}})
+ (fn [_ _]
+   {:navigate-to [:drinks]}))
+
+(kf/reg-chain
+ ::edit-drink
+ (fn [_ [drink]]
+   {:http-xhrio {:method          :put
+                 :on-failure      [::set-error ::edit-drink]
+                 :params          drink
+                 :format          (http/transit-request-format)
+                 :response-format (http/transit-response-format)
+                 :uri             (str "/api/drinks/" (:id drink))}})
+ (fn [_ _]
+   {:navigate-to [:drinks]}))

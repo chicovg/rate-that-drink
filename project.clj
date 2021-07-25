@@ -7,7 +7,6 @@
                  [buddy/buddy-core "1.6.0"]
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
-                 [breaking-point "0.1.2"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [cheshire "5.10.0"]
                  [cljs-ajax "0.8.0"]

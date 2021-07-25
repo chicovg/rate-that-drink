@@ -1,8 +1,7 @@
 (ns rate-that-drink.subs
   (:require [re-frame.core :as rf]
             [rate-that-drink.common :as common]
-            [rate-that-drink.db :as db]
-            [clojure.string :as str]))
+            [rate-that-drink.db :as db]))
 
 (rf/reg-sub
  ::loading?
@@ -13,16 +12,6 @@
  ::profile
  (fn [db]
    (::db/profile db)))
-
-;; TODO total is already coming back from server, need to convert it
-(defn calculate-total
-  [{:keys [appearance
-           smell
-           taste]
-    :as drink}]
-  (assoc drink :total (-> (+ appearance smell taste)
-                          (/ 5)
-                          (.toFixed 1))))
 
 (rf/reg-sub
  ::drinks
@@ -41,9 +30,18 @@
  (fn [db] (::db/drinks-page-size db)))
 
 (rf/reg-sub
+ ::drinks-sort
+ (fn [db] (::db/drinks-sort db)))
+
+(rf/reg-sub
  ::error
  (fn [db [_ type]]
    (get-in db [::db/error type])))
+
+(rf/reg-sub
+ ::selected-drink-id
+ (fn [db _]
+   (::db/selected-drink-id db)))
 
 (rf/reg-sub
  ::filtered-drinks
@@ -52,7 +50,18 @@
  (fn [[drinks drinks-filter]]
    (->> drinks
         (common/filter-drinks drinks-filter)
-        (map calculate-total))))
+        (map #(assoc % :total (common/calculate-ratings-total %))))))
+
+(rf/reg-sub
+ ::filtered-sorted-drinks
+ :<- [::filtered-drinks]
+ :<- [::drinks-sort]
+ (fn [[drinks {:keys [direction field]}]]
+   (sort (fn [drink-a drink-b]
+           (if (= direction :ascending)
+             (< (get drink-a field) (get drink-b field))
+             (> (get drink-a field) (get drink-b field))))
+         drinks)))
 
 (rf/reg-sub
  ::drinks-page-count
@@ -63,37 +72,28 @@
 
 (rf/reg-sub
  ::paginated-drinks
- :<- [::filtered-drinks]
+ :<- [::filtered-sorted-drinks]
  :<- [::drinks-page]
  :<- [::drinks-page-size]
  (fn [[filtered-drinks drinks-page drinks-page-size]]
    (if (not-empty filtered-drinks)
      (as-> filtered-drinks $
        (partition-all drinks-page-size $)
-       (nth $ drinks-page))
+       (nth $ (dec drinks-page)))
      filtered-drinks)))
-
-(defn visible-range
-  [page-count selected-page]
-  (let [max (if (> selected-page (- page-count 3))
-              (- page-count 1)
-              (max 4 (+ selected-page 2)))
-        min (- max 4)]
-    [min max]))
-
-(defn within-visible-range?
-  [page-count selected-page page]
-  (if (> page-count 5)
-    (let [[min max] (visible-range page-count selected-page)]
-      (and (>= page min)
-           (<= page max)))
-    true))
 
 (rf/reg-sub
  ::drinks-pages
- :<- [::drinks-page]
  :<- [::drinks-page-count]
- (fn [[drinks-page drinks-page-count]]
-   (for [n (range 0 drinks-page-count)
-         :when (within-visible-range? drinks-page-count drinks-page n)]
-     n)))
+ (fn [drinks-page-count]
+   (for [n (range 0 drinks-page-count)]
+     (inc n))))
+
+(rf/reg-sub
+ ::selected-drink
+ :<- [::drinks]
+ :<- [::selected-drink-id]
+ (fn [[drinks selected-drink-id]]
+   (->> drinks
+        (filter #(= selected-drink-id (:id %)))
+        first)))
