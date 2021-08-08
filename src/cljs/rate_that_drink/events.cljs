@@ -73,6 +73,19 @@
    (assoc db ::db/selected-drink-id id)))
 
 (rf/reg-event-db
+ ::set-selected-drink-id
+ (fn [{drinks ::db/drinks :as db} [_ id]]
+   (let [drink (->> drinks
+                    (filter #(= id (:id %)))
+                    first)]
+     (assoc db ::db/selected-drink drink))))
+
+(rf/reg-event-db
+ ::set-selected-drink
+ (fn [db [_ drink]]
+   (assoc db ::db/selected-drink drink)))
+
+(rf/reg-event-db
  ::set-drinks-sort
  (fn [db [_ sort-field]]
    (let [flip-sort-direction       (fn [dir]
@@ -123,6 +136,18 @@
                  [::nav-to [:drinks]]]}))
 
 (kf/reg-chain
+ ::logout
+ (fn [_ _]
+   {:http-xhrio {:method          :put
+                 :on-failure      [::handle-error ::logout]
+                 :format          (http/transit-request-format)
+                 :response-format (http/transit-response-format)
+                 :uri             "/api/logout"}})
+ (fn [_ _]
+   {:dispatch-n [[::set-profile nil]
+                 [::nav-to [:home]]]}))
+
+(kf/reg-chain
  ::load-profile
  (fn [_ _]
    {:dispatch [::set-loading? ::load-profile]
@@ -169,6 +194,19 @@
                  :uri             "/api/drinks"}})
  (fn [_ [drinks]]
    {:dispatch [::set-drinks drinks]}))
+
+(kf/reg-chain
+ ::load-and-set-selected-drink
+ (fn [_ _]
+   {:http-xhrio {:method          :get
+                 :on-failure      [::handle-error ::load-drinks]
+                 :response-format (http/transit-response-format)
+                 :uri             "/api/drinks"}})
+ (fn [_ [id drinks]]
+   (let [drink (->> drinks
+                    (filter #(= id (:id %)))
+                    first)]
+     {:dispatch [::set-selected-drink drink]})))
 
 (kf/reg-chain
  ::create-drink

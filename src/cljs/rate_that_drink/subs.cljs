@@ -1,7 +1,8 @@
 (ns rate-that-drink.subs
   (:require [re-frame.core :as rf]
             [rate-that-drink.common :as common]
-            [rate-that-drink.db :as db]))
+            [rate-that-drink.db :as db]
+            [clojure.string :as s]))
 
 (rf/reg-sub
  ::loading?
@@ -39,9 +40,10 @@
    (get-in db [::db/error type])))
 
 (rf/reg-sub
- ::selected-drink-id
+ ::selected-drink
  (fn [db _]
-   (::db/selected-drink-id db)))
+   (let [drink (::db/selected-drink db)]
+     (assoc drink :total (common/calculate-ratings-total drink)))))
 
 (rf/reg-sub
  ::filtered-drinks
@@ -58,9 +60,10 @@
  :<- [::drinks-sort]
  (fn [[drinks {:keys [direction field]}]]
    (sort (fn [drink-a drink-b]
-           (if (= direction :ascending)
-             (< (get drink-a field) (get drink-b field))
-             (> (get drink-a field) (get drink-b field))))
+           (let [compare-fn (if (= direction :ascending) < >)
+                 field-a    (some-> drink-a field str s/lower-case)
+                 field-b    (some-> drink-b field str s/lower-case)]
+             (compare-fn field-a field-b)))
          drinks)))
 
 (rf/reg-sub
@@ -88,12 +91,3 @@
  (fn [drinks-page-count]
    (for [n (range 0 drinks-page-count)]
      (inc n))))
-
-(rf/reg-sub
- ::selected-drink
- :<- [::drinks]
- :<- [::selected-drink-id]
- (fn [[drinks selected-drink-id]]
-   (->> drinks
-        (filter #(= selected-drink-id (:id %)))
-        first)))

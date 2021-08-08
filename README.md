@@ -12,8 +12,28 @@ You will need [Leiningen][1] 2.0 or above installed.
 
 To start a web server for the application, run:
 
-    lein run 
+``` sh
+lein run 
+```
+
+OR start a REPL via:
+
+``` sh
+lein repl
+```
+
+And run the server via:
+
+``` clojure
+(start)
+```
+
+To start ClojureScript compilation with a shadow-cljs REPL run:
+
+``` sh
+lein shadow watch app
+```
 
 ## License
 
-Copyright © 2020 FIXME
+Copyright © 2020 Victor Guthrie

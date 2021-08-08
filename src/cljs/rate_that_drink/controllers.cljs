@@ -25,9 +25,16 @@
   :start (fn [_] [::events/load-drinks])})
 
 (kf/reg-controller
+ ::new-drink
+ {:params (fn [{:keys [data]}]
+            (= (:name data) :new-drink))
+  :start (fn [_]
+           (rf/dispatch [::events/set-selected-drink {}]))})
+
+(kf/reg-controller
  ::edit-drink
  {:params (fn [{:keys [data path-params]}]
             (when (= (:name data) :edit-drink)
               (-> path-params :id (js/Number.) int)))
   :start (fn [_ id]
-           (rf/dispatch [::events/set-selected-drink-id id]))})
+           (rf/dispatch [::events/load-and-set-selected-drink id]))})

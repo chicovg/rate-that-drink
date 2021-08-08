@@ -9,3 +9,8 @@
 .margin-right-sm {
     margin-right: 4px;
 }
+
+.flex-horizontal-align-items-center {
+    align-items: center;
+    display: flex;
+}

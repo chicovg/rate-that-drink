@@ -2,9 +2,11 @@
   (:require
    ["semantic-ui-react" :refer [Button
                                 Container
+                                Confirm
                                 Dimmer
                                 Divider
                                 Form
+                                Form.Field
                                 Form.Group
                                 Form.Input
                                 Form.Select
@@ -18,6 +20,10 @@
                                 Message
                                 Message.Header
                                 Pagination
+                                Popup
+                                Popup.Content
+                                Popup.Header
+                                Rating
                                 Segment
                                 Table
                                 Table.Body
@@ -113,6 +119,15 @@
                   :type     :button}
        "Cancel"]]]))
 
+(defn logout-page
+  []
+  [:div
+   [:> Confirm {:header     "Log out"
+                :content    "Are you sure that you want to log out?"
+                :open       true
+                :on-cancel  #(rf/dispatch [::events/nav-to [:drinks]])
+                :on-confirm #(rf/dispatch [::events/logout])}]])
+
 (defn profile-page
   [{:keys [is-edit? profile on-cancel on-submit]}]
   [:> Segment
@@ -188,17 +203,31 @@
                    :on-cancel (fn []
                                 (rf/dispatch [::events/nav-to [:drinks]]))}]))
 
-(defrecord Column [key label mobile? width])
+(defn rating-comp
+  [label rating-str]
+  [:> Popup
+   {:trigger
+    (r/as-element
+     [:> Rating {:disabled       true
+                 :icon           "star"
+                 :max-rating     5
+                 :rating         rating-str
+                 :size           "mini"}])}
+   [:> Popup.Header label]
+   [:> Popup.Content
+    [:span rating-str]]])
+
+(defrecord Column [key label component mobile? width])
 
 (def all-columns
-  [(->Column :name       "Name"       true  nil)
-   (->Column :maker      "Maker"      true  nil)
-   (->Column :type       "Type"       false nil)
-   (->Column :style      "Style"      false nil)
-   (->Column :appearance "Appearance" false 1)
-   (->Column :smell      "Smell"      false 1)
-   (->Column :taste      "Taste"      false 1)
-   (->Column :total      "Rating"     true  1)])
+  [(->Column :name       "Name"       nil         true  nil)
+   (->Column :maker      "Maker"      nil         true  nil)
+   (->Column :type       "Type"       nil         false nil)
+   (->Column :style      "Style"      nil         false nil)
+   (->Column :appearance "Appearance" rating-comp false 1)
+   (->Column :smell      "Smell"      rating-comp false 1)
+   (->Column :taste      "Taste"      rating-comp false 1)
+   (->Column :total      "Rating"     rating-comp true  1)])
 
 (defn drinks-table-menu
   [{:keys [page page-count]}]
@@ -210,7 +239,8 @@
                :icon        "search"
                :placeholder "Search..."
                :on-change   #(rf/dispatch
-                              [::events/set-drinks-filter (-> % .-target .-value)])}]
+                              [::events/set-drinks-filter (-> % .-target .-value)])
+               :value       @(rf/subscribe [::subs/drinks-filter])}]
     [:> Button
      {:on-click #(rf/dispatch [::events/nav-to [:new-drink]])}
      [:> Icon {:name "plus"}]
@@ -237,10 +267,12 @@
      ^{:key (:id drink)}
      [:> Table.Row
       {:on-click #(rf/dispatch [::events/nav-to [:edit-drink {:id (:id drink)}]])}
-      (for [{key :key} columns]
+      (for [{:keys [component key label]} columns]
         ^{:key key}
         [:> Table.Cell
-         (get drink key)])])])
+         (if component
+           [component label (get drink key)]
+           (get drink key))])])])
 
 (defn drinks-table
   [{:keys [columns drinks sort]}]
@@ -296,148 +328,139 @@
    {:key :other :text "Other" :value "other"}])
 
 (defn drink-ratings-group
-  [{:keys [drink field label on-change]}]
+  [{:keys [drink
+           editable?
+           field
+           label
+           notes-field
+           on-field-change]
+    :or   {editable?   true
+           notes-field (keyword (str (name field) "_notes"))}}]
   [:<>
-   [:> Header {:as       :h4
-               :dividing true}
-    label]
-   [:> Form.Group {:widths :two}
-    [:> Form.Input {:default-value (get drink field)
-                    :name          field
-                    :label         "Rating (1-5)"
-                    :max           5
-                    :min           1
-                    :on-change     (partial on-change field)
-                    :placeholder   label
-                    :required      true
-                    :type          :number}]
-    (let [notes-key (keyword (str (name field) "_notes"))]
-      [:> Form.TextArea {:default-value (get drink notes-key)
-                         :name          notes-key
-                         :label         "Notes"
-                         :on-change     (partial on-change notes-key)
-                         :placeholder   "Notes"}])]])
+   [:div.field
+    [:> Header {:as       :h4
+                :dividing true}
+     label]
+    [:label {:for field} "Rating"]
+    [:div.flex-horizontal-align-items-center
+     [:> Rating {:class       "margin-right-sm"
+                 :disabled    (not editable?)
+                 :rating      (get drink field)
+                 :icon        "star"
+                 :max-rating  5
+                 :name        field
+                 :on-rate     (fn [_ value]
+                                (on-field-change field (.-rating value)))}]
+     [:p "(" (get drink field) ")"]]
+    [:> Form.TextArea {:name          notes-field
+                       :label         "Notes"
+                       :on-change     #(on-field-change notes-field (-> % .-target .-value))
+                       :placeholder   "Notes"
+                       :default-value (get drink notes-field)}]]])
 
 (defn- to-number
   [s]
-  (when s
-    (js/Number. s)))
+  (when s (-> s (js/Number.) (.valueOf))))
 
-(defn ratings-to-number
+(defn- blank-to-nil
+  [s]
+  (when-not (st/blank? s) s))
+
+(defn update-fields
   [drink]
   (-> drink
-      (update :appearance to-number)
-      (update :smell      to-number)
-      (update :taste      to-number)))
-
-(defn overall-rating-group
-  [{:keys [drink on-change]}]
-  [:<>
-   [:> Header {:as       :h4
-               :dividing true}
-    "Overall"]
-   [:> Form.Group {:widths :two}
-    [:div.ui.field {:label "Rating (1-5)"}
-     [:label "Rating (1-5)"]
-     [:p (common/calculate-ratings-total drink)]]
-    [:> Form.TextArea {:default-value (:comments drink)
-                       :name          :comments
-                       :label         "Comments"
-                       :on-change     (partial on-change :comments)
-                       :placeholder   "Comments"
-                       :rows          3}]]])
+      (update :appearance       to-number)
+      (update :smell            to-number)
+      (update :taste            to-number)
+      (update :appearance-notes blank-to-nil)
+      (update :smell-notes      blank-to-nil)
+      (update :taste-notes      blank-to-nil)
+      (update :comments         blank-to-nil)))
 
 (defn drink-page
-  [{:keys [drink is-edit? on-cancel on-change on-select-change on-submit]}]
-  [:> Segment
-   [:> Header {:as :h1} (if is-edit?
-                          "Edit drink"
-                          "Add a new drink")]
-   [:> Form {:on-submit on-submit}
-    [:> Form.Group {:widths :two}
-     [:> Form.Input {:default-value (:name drink)
-                     :label         "Name"
-                     :name          :name
-                     :on-change     (partial on-change :name)
-                     :placeholder   "Name"
-                     :required      true}]
-     [:> Form.Input {:default-value (:maker drink)
-                     :label         "Maker"
-                     :name          :maker
-                     :on-change     (partial on-change :maker)
-                     :placeholder   "Maker"
-                     :required      true}]]
-    [:> Form.Group {:widths :two}
-     [:> Form.Select {:default-value (:type drink)
-                      :label         "Type"
-                      :name          :type
-                      :on-change     (partial on-select-change :type)
-                      :options       drink-type-options
-                      :placeholder   "Type"
-                      :search        true
-                      :selection     true
-                      :required      true}]
-     [:> Form.Input {:default-value (:style drink)
-                     :label         "Style"
-                     :name          :style
-                     :on-change     (partial on-change :style)
-                     :placeholder   "Style"
-                     :required      true}]]
-    [drink-ratings-group {:drink drink
-                          :field     :appearance
-                          :label     "Appearance"
-                          :on-change on-change}]
-    [drink-ratings-group {:drink     drink
-                          :field     :smell
-                          :label     "Smell"
-                          :on-change on-change}]
-    [drink-ratings-group {:drink     drink
-                          :field     :taste
-                          :label     "Taste"
-                          :on-change on-change}]
-    [overall-rating-group {:drink     drink
-                           :on-change on-change}]
-    [:> Divider {:horizontal true}]
-    [:> Button {:primary  true
-                :type     :submit}
-     "Submit"]
-    [:> Button {:on-click on-cancel
-                :type     :button}
-     "Cancel"]]])
+  [{:keys [is-edit? on-cancel on-submit]}]
+  (let [drink           @(rf/subscribe [::subs/selected-drink])
+        on-field-change (fn [field value]
+                          (rf/dispatch [::events/set-selected-drink
+                                        (update-fields (assoc drink field value))]))]
+    [:> Segment
+     [:> Header {:as :h1} (if is-edit?
+                            "Edit drink"
+                            "Add a new drink")]
+     [:> Form {:on-submit #(on-submit drink)}
+      [:> Form.Group {:widths :two}
+       [:> Form.Input {:default-value (:name drink)
+                       :label         "Name"
+                       :name          :name
+                       :on-change     #(on-field-change :name (-> % .-target .-value))
+                       :placeholder   "Name"
+                       :required      true}]
+       [:> Form.Input {:default-value (:maker drink)
+                       :label         "Maker"
+                       :name          :maker
+                       :on-change     #(on-field-change :maker (-> % .-target .-value))
+                       :placeholder   "Maker"
+                       :required      true}]]
+      [:> Form.Group {:widths :two}
+       [:> Form.Select {:label       "Type"
+                        :name        :type
+                        :on-change   #(on-field-change :type (.-value %2))
+                        :options     drink-type-options
+                        :placeholder "Type"
+                        :search      true
+                        :selection   true
+                        :required    true
+                        :value       (:type drink)}]
+       [:> Form.Input {:label       "Style"
+                       :name        :style
+                       :on-change    #(on-field-change :style (-> % .-target .-value))
+                       :placeholder "Style"
+                       :required    true
+                       :default-value       (:style drink)}]]
+      [:> Form.Group {:widths :two}
+       [drink-ratings-group {:drink           drink
+                             :field           :appearance
+                             :label           "Appearance"
+                             :on-field-change on-field-change}]
+       [drink-ratings-group {:drink           drink
+                             :field           :smell
+                             :label           "Smell"
+                             :on-field-change on-field-change}]]
+      [:> Form.Group {:widths :two}
+       [drink-ratings-group {:drink           drink
+                             :field           :taste
+                             :label           "Taste"
+                             :on-field-change on-field-change}]
+       [drink-ratings-group {:drink           drink
+                             :editable?       false
+                             :field           :total
+                             :label           "Overall"
+                             :notes-field     :comments
+                             :on-field-change on-field-change}]]
+      [:> Divider {:horizontal true}]
+      [:> Button {:primary  true
+                  :type     :submit}
+       "Submit"]
+      [:> Button {:on-click on-cancel
+                  :type     :button}
+       "Cancel"]]]))
 
 (defn new-drink-page
   []
-  (let [drink (r/atom {})]
-    (fn []
-      [drink-page {:drink     @drink
-                   :on-cancel (fn []
-                                (rf/dispatch [::events/nav-to [:drinks]]))
-                   :on-change (fn [field e]
-                                (swap! drink #(-> %
-                                                  (assoc field (-> e .-target .-value))
-                                                  ratings-to-number)))
-                   :on-select-change (fn [field _ d]
-                                       (swap! drink assoc field (.-value d)))
-                   :on-submit (fn [_]
-                                (rf/dispatch [::events/create-drink @drink]))}])))
+  [drink-page {:on-cancel (fn []
+                            (rf/dispatch [::events/nav-to [:drinks]])
+                            (rf/dispatch [::events/set-selected-drink nil]))
+               :on-submit (fn [drink]
+                            (rf/dispatch [::events/create-drink drink]))}])
 
 (defn edit-drink-page
   []
-  (let [selected-drink @(rf/subscribe [::subs/selected-drink])
-        drink          (r/atom (or selected-drink {}))]
-    (fn []
-      [drink-page {:drink     @drink
-                   :is-edit?  true
-                   :on-cancel (fn []
-                                (rf/dispatch [::events/nav-to [:drinks]]))
-                   :on-change (fn [field e]
-                                (swap! drink #(-> %
-                                                  (assoc field (-> e .-target .-value))
-                                                  ratings-to-number)))
-                   :on-select-change (fn [field _ d]
-                                       (swap! drink assoc field (.-value d)))
-                   :on-submit (fn [_]
-                                (rf/dispatch [::events/edit-drink @drink]))}])))
+  [drink-page {:is-edit?  true
+               :on-cancel (fn []
+                            (rf/dispatch [::events/nav-to [:drinks]])
+                            (rf/dispatch [::events/set-selected-drink nil]))
+               :on-submit (fn [drink]
+                            (rf/dispatch [::events/edit-drink drink]))}])
 
 (defn route-page
   [route]
@@ -457,7 +480,7 @@
       :edit-drink [edit-drink-page]
       :drinks     [drinks-page]
       :login      [login-page]
-      :logout     [route-page :logout]
+      :logout     [logout-page]
       :new-drink  [new-drink-page]
       :profile    [edit-profile-page]
       :register   [create-profile-page]
