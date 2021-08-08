@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chicovg/the-beer-tasting-app.git"
+    "url": "git+https://github.com/chicovg/rate-that-drink.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/chicovg/the-beer-tasting-app/issues"
+    "url": "https://github.com/chicovg/rate-that-drink/issues"
   },
-  "homepage": "https://github.com/chicovg/the-beer-tasting-app#readme",
+  "homepage": "https://github.com/chicovg/rate-that-drink#readme",
   "devDependencies": {
     "xmlhttprequest": "1.8.0"
   },

@@ -1,7 +1,7 @@
 (defproject rate-that-drink "2.0.0-SNAPSHOT"
 
   :description "A drink journaling web application"
-  :url "https://github.com/chicovg/rate-that-beer"
+  :url "https://github.com/chicovg/rate-that-drink"
 
   :dependencies [[buddy/buddy-auth "2.2.0"]
                  [buddy/buddy-core "1.6.0"]

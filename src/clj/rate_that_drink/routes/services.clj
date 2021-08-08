@@ -19,8 +19,7 @@
                                     no-content
                                     not-found
                                     ok
-                                    unauthorized]]
-   [clojure.string :as str]))
+                                    unauthorized]]))
 
 (defn service-routes []
   ["/api"
