@@ -1,0 +1,30 @@
+{
+  "name": "rate-that-drink",
+  "version": "1.0.0",
+  "description": "An fullstack luminus app to keep track of my beer tastings.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chicovg/the-beer-tasting-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chicovg/the-beer-tasting-app/issues"
+  },
+  "homepage": "https://github.com/chicovg/the-beer-tasting-app#readme",
+  "devDependencies": {
+    "xmlhttprequest": "1.8.0"
+  },
+  "dependencies": {
+    "react": "16.13.0",
+    "react-dom": "16.13.0",
+    "semantic-ui-react": "2.0.3"
+  }
+}
