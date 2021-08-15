@@ -68,19 +68,6 @@
    (assoc db ::db/drinks-page p)))
 
 (rf/reg-event-db
- ::set-selected-drink-id
- (fn [db [_ id]]
-   (assoc db ::db/selected-drink-id id)))
-
-(rf/reg-event-db
- ::set-selected-drink-id
- (fn [{drinks ::db/drinks :as db} [_ id]]
-   (let [drink (->> drinks
-                    (filter #(= id (:id %)))
-                    first)]
-     (assoc db ::db/selected-drink drink))))
-
-(rf/reg-event-db
  ::set-selected-drink
  (fn [db [_ drink]]
    (assoc db ::db/selected-drink drink)))
@@ -112,13 +99,6 @@
 
      :else
      {:dispatch [::set-error :unknown ::errors/unknown]})))
-
-(rf/reg-event-fx
- ::select-drink
- (fn [{::db/keys [drinks]} [_ id]]
-   (if (some #(= id (:id %)) drinks)
-     {:dispatch [::set-selected-drink-id id]}
-     {:navigate-to [:drinks]})))
 
 ;; Chains
 

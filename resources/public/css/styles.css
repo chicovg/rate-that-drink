@@ -6,6 +6,10 @@
     margin-top: 8px;
 }
 
+.margin-top-sm {
+    margin-top: 4px;
+}
+
 .margin-right-sm {
     margin-right: 4px;
 }
@@ -13,4 +17,14 @@
 .flex-horizontal-align-items-center {
     align-items: center;
     display: flex;
+}
+
+.flex-horizontal-wrap {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.min-width-max-content {
+    min-width: max-content;
 }

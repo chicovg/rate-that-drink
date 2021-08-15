@@ -6,7 +6,6 @@
                                 Dimmer
                                 Divider
                                 Form
-                                Form.Field
                                 Form.Group
                                 Form.Input
                                 Form.Select
@@ -36,7 +35,6 @@
    [kee-frame.core :as kf]
    [reagent.core :as r]
    [re-frame.core :as rf]
-   [rate-that-drink.common :as common]
    [rate-that-drink.events :as events]
    [rate-that-drink.errors :as errors]
    [rate-that-drink.routes :refer [route->text visible-routes]]
@@ -229,22 +227,34 @@
    (->Column :taste      "Taste"      rating-comp false 1)
    (->Column :total      "Rating"     rating-comp true  1)])
 
+(defn drinks-filter-input
+  []
+  (let [filter      @(rf/subscribe [::subs/drinks-filter])
+        has-filter? (pos? (count filter))]
+    [:> Input {:action        has-filter?
+               :class         ["margin-right-sm" "margin-top-sm"]
+               :icon-position "left"}
+     [:> Icon {:name "search"}]
+     [:input {:on-change   #(rf/dispatch [::events/set-drinks-filter (-> % .-target .-value)])
+              :placeholder "Search"
+              :value       filter}]
+     (when has-filter?
+       [:> Button {:basic    true
+                   :icon "delete"
+                   :on-click #(rf/dispatch [::events/set-drinks-filter ""])}])]))
+
 (defn drinks-table-menu
   [{:keys [page page-count]}]
   [:div {:style {:display         :flex
                  :flex-direction  :column
                  :justify-content :space-between}}
-   [:div
-    [:> Input {:class       "margin-right-sm"
-               :icon        "search"
-               :placeholder "Search..."
-               :on-change   #(rf/dispatch
-                              [::events/set-drinks-filter (-> % .-target .-value)])
-               :value       @(rf/subscribe [::subs/drinks-filter])}]
-    [:> Button
-     {:on-click #(rf/dispatch [::events/nav-to [:new-drink]])}
-     [:> Icon {:name "plus"}]
-     "Add Drink"]]
+   [:div.flex-horizontal-wrap
+    [drinks-filter-input]
+    [:div.margin-top-sm
+     [:> Button
+      {:on-click #(rf/dispatch [::events/nav-to [:new-drink]])}
+      [:> Icon {:name "plus"}]
+      "Add Drink"]]]
    [:p {:class "margin-top-md"} (str "Page " page " of " page-count)]])
 
 (defn drinks-table-header
@@ -290,14 +300,16 @@
   [{:keys [page pages]}]
   [:div {:style {:display "flex"
                  :justify-content "flex-end"}}
-   [:> Pagination {:active-page page
+   [:> Pagination {:active-page    page
                    :boundary-range 1
+                   :first-item     nil
+                   :last-item      nil
                    :on-page-change (fn [_ pag]
                                      (rf/dispatch [::events/set-drinks-page
                                                    (-> pag js->clj (get "activePage"))]))
-                   ;; :show-elipsis true
-                   :sibling-range 1
-                   :total-pages (count pages)}]])
+                   :sibling-range  1
+                   :size           "mini"
+                   :total-pages    (count pages)}]])
 
 (defn drinks-page
   []
@@ -448,8 +460,7 @@
 (defn new-drink-page
   []
   [drink-page {:on-cancel (fn []
-                            (rf/dispatch [::events/nav-to [:drinks]])
-                            (rf/dispatch [::events/set-selected-drink nil]))
+                            (rf/dispatch [::events/nav-to [:drinks]]))
                :on-submit (fn [drink]
                             (rf/dispatch [::events/create-drink drink]))}])
 
@@ -457,8 +468,7 @@
   []
   [drink-page {:is-edit?  true
                :on-cancel (fn []
-                            (rf/dispatch [::events/nav-to [:drinks]])
-                            (rf/dispatch [::events/set-selected-drink nil]))
+                            (rf/dispatch [::events/nav-to [:drinks]]))
                :on-submit (fn [drink]
                             (rf/dispatch [::events/edit-drink drink]))}])
 
